@@ -1,0 +1,64 @@
+# TextTile ERP Changelog
+
+## [Unreleased]
+### Added
+- **Certifications Page**
+  - Designed the comprehensive Certifications page, demonstrating TextTile's adherence to global compliance standards.
+  - Deployed the `CertificationCard` in a scalable grid format alongside an Enterprise Security spotlight.
+- **Sustainability Page**
+  - Created the Sustainability overview page to detail environmental efforts and the 2030 vision.
+  - Assembled custom split-screen layouts and recycled the `StatisticCard` for impact measuring.
+- **Capabilities Page**
+  - Fully authored the Manufacturing Capabilities page, spotlighting factory tech, robotics, and QC protocols.
+  - Recycled the `StatisticCard` and `CapabilityCard` to rapidly assemble the operational scale grids.
+- **Contact Page (Get in Touch)**
+  - Successfully imported and recreated the target Figma/Stitch design for the Contact page.
+  - Developed the form layout, global footprint locations matrix, and priority contact blocks.
+  - Upgraded form with client-side validation, interactive submission states, and a Google Maps UI placeholder.
+- **Module 01: Products Page**
+  - Engineered the dedicated Products page with an interactive client-side category filter.
+  - Recycled the `ProductCard` and `CTASection` components to ensure brand consistency.
+  - Utilized Framer Motion for smooth, interruptible layout transitions when filtering products.
+- **Module 00: Global Footer Component (Milestone 3.9)**
+  - Fully rebuilt the global layout `Footer` component with comprehensive navigation structure.
+  - Implemented responsive footer columns for brand summary, quick links, and contact data.
+  - Integrated custom SVG social icons and smooth-scroll back-to-top functionality.
+- **Module 00: Final CTA Section (Milestone 3.8)**
+  - Developed a fully reusable `CTASection` component built for sitewide deployment.
+  - Implemented the primary conversion block at the base of the Home page.
+- **Module 00: Certifications Section (Milestone 3.7)**
+  - Authored a dynamic `CertificationCard` component capable of accepting external image URLs or defaulting to Lucide icons.
+  - Implemented the 'Industry-Leading Compliance' certifications grid onto the Home page.
+  - Maintained accessibility guidelines (semantic markup, clear focus states, contrast).
+- **Module 00: Sustainability Section (Milestone 3.6)**
+  - Appended the "Committed to a Greener Future" Sustainability section to the Home page.
+  - Implemented `SustainabilityCard` for highlighting environmental initiatives.
+  - Built an overlapping image-card layout to showcase the '2030 Pledge'.
+- **Module 00: Manufacturing Capabilities Section (Milestone 3.5)**
+  - Extracted a generic `SectionHeader` component for consistent typography.
+  - Implemented the `CapabilityCard` UI element utilizing Lucide React icons.
+  - Built out the responsive Manufacturing Capabilities section on the Home page.
+- **Module 00: Featured Products Section (Milestone 3.4)**
+  - Implemented the Featured Products grid on the Home page.
+  - Created a modular `ProductCard` component encompassing images, content, and CTA buttons.
+  - Integrated hover scaling and scroll reveal animations (`framer-motion`).
+- **Module 00: Statistics Section (Milestone 3.3)**
+  - Created a reusable `StatisticCard` component.
+  - Implemented the responsive Statistics section on the Home page using dynamic prop structures.
+  - Added visual enhancements like soft shadows and Framer Motion reveal effects.
+- **Module 00: Company Introduction Section (Milestone 3.2)**
+  - Implemented the Company Intro section directly beneath the Hero on the Home page.
+  - Added responsive grid highlighting key features (20+ Years, Global Reach, ISO Certified).
+  - Configured subtle scroll-reveal animations via `framer-motion`.
+- **Module 00: Home Page Hero Section (Milestone 3.1)**
+  - Implemented the `Home` page component with a responsive Hero section.
+  - Added entrance animations for text and imagery using `framer-motion`.
+  - Configured typography, buttons, and decorative background gradient masking.
+- **Module 00: Shared Components & Global Layout (Milestone 2)**
+  - Created `PublicLayout`, responsive `Navbar`, `MobileNav`, and `Footer` components.
+  - Implemented `Button` and `Container` as reusable UI primitives.
+  - Configured `react-router-dom` with baseline routing for all landing pages.
+- **Module 00: Design Foundation (Milestone 1)**
+  - Initialized global theme variables in `index.css`.
+  - Configured Tailwind design tokens for colors, typography scale, spacing, border-radius, and shadows.
+  - Setup responsive breakpoints and container constraints inside `tailwind.config.js`.
