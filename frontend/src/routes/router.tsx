@@ -29,7 +29,9 @@ import { ProjectsList } from '@/pages/merchandiser/ProjectsList';
 import { ProjectWizard } from '@/pages/merchandiser/ProjectWizard';
 import { ProjectDetails } from '@/pages/merchandiser/ProjectDetails';
 import { BOMBuilder } from '@/pages/merchandiser/BOMBuilder';
+import { BOMsList } from '@/pages/merchandiser/BOMsList';
 import { PurchaseOrdersList } from '@/pages/merchandiser/PurchaseOrdersList';
+import { MerchandiserReports } from '@/pages/merchandiser/MerchandiserReports';
 
 // Yarn Manager Pages
 import { YarnManagerDashboard } from '@/pages/yarn-manager/YarnManagerDashboard';
@@ -107,8 +109,9 @@ export const router = createBrowserRouter([
               { path: 'projects/new', element: <ProjectWizard /> },
               { path: 'projects/:id', element: <ProjectDetails /> },
               { path: 'projects/:id/bom', element: <BOMBuilder /> },
+              { path: 'boms', element: <BOMsList /> },
               { path: 'pos', element: <PurchaseOrdersList /> },
-              // Will add reports here later
+              { path: 'reports', element: <MerchandiserReports /> },
             ],
           },
           {
