@@ -62,6 +62,10 @@ module.exports = {
         md: "var(--radius)",
         sm: "calc(var(--radius) - 2px)",
       },
+      fontFamily: {
+        sans: ['Inter', 'sans-serif'],
+        heading: ['Inter', 'sans-serif'],
+      },
       spacing: {
         4: "1rem",
         8: "2rem",

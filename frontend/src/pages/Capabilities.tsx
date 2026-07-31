@@ -1,189 +1,131 @@
-import { motion } from 'framer-motion';
-import { Container } from '@/components/ui/Container';
-import { SectionHeader } from '@/components/ui/SectionHeader';
-import { CTASection } from '@/components/ui/CTASection';
-import { CapabilityCard } from '@/components/ui/CapabilityCard';
-import { StatisticCard } from '@/components/ui/StatisticCard';
-import { ShieldCheck, Factory, Cpu, Settings, TrendingUp, Search } from 'lucide-react';
+import { Button } from '@/components/ui/Button';
 import heroImage from '@/assets/hero.png';
+import { ArrowRight, Cog, Scissors, Droplets, ShieldCheck, Ruler, Truck } from 'lucide-react';
 
-// Mock Data
 const CAPABILITIES = [
   {
-    id: '1',
-    title: 'Precision Fabric Cutting',
-    description: 'Automated and laser-guided cutting floors capable of sub-millimeter accuracy.',
+    title: 'Research & Development',
+    desc: 'Our in-house R&D lab pioneers new fabric blends, innovative wash techniques, and sustainable dyeing processes before they hit the market.',
+    icon: Cog,
   },
   {
-    id: '2',
-    title: 'Smart Stitching',
-    description: 'IoT-enabled sewing machines tracking stitch count and tension in real-time.',
+    title: 'Precision Cutting',
+    desc: 'Automated laser cutting machinery ensures zero-defect precision and minimizes fabric waste by up to 15%.',
+    icon: Scissors,
   },
   {
-    id: '3',
-    title: 'Automated Sorting',
-    description: 'Robotic sorting and material handling systems reducing manual labor constraints.',
+    title: 'Advanced Dyeing',
+    desc: 'State-of-the-art closed-loop dyeing systems that drastically reduce water consumption while achieving vibrant, colorfast results.',
+    icon: Droplets,
   },
   {
-    id: '4',
     title: 'Quality Assurance',
-    description: 'AI computer vision cameras scanning every garment for microscopic defects.',
+    desc: 'Multi-stage AQL 1.5 inspection protocols implemented across every production line to guarantee flawless final products.',
+    icon: ShieldCheck,
+  },
+  {
+    title: 'Pattern Engineering',
+    desc: '3D CAD pattern making allowing for rapid prototyping, perfect fit scaling, and reduced physical sampling.',
+    icon: Ruler,
+  },
+  {
+    title: 'Global Logistics',
+    desc: 'Integrated supply chain management with real-time tracking, ensuring on-time delivery to over 45 countries worldwide.',
+    icon: Truck,
   }
-];
-
-const STATISTICS = [
-  { label: 'Annual Capacity', value: '50M+', description: 'Units produced globally' },
-  { label: 'Defect Rate', value: '< 0.1%', description: 'Industry-leading quality' },
-  { label: 'Automated Facilities', value: '12', description: 'Smart factories active' },
-  { label: 'Uptime', value: '99.9%', description: 'Operational reliability' }
 ];
 
 export function Capabilities() {
   return (
-    <div className="w-full">
-      {/* Hero Section */}
-      <section className="relative overflow-hidden bg-background pt-24 pb-16 md:pt-32 md:pb-24 border-b border-border/50">
-        <Container className="relative z-10 text-center max-w-4xl mx-auto">
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="text-4xl md:text-5xl lg:text-6xl font-bold font-heading tracking-tight text-foreground mb-6"
-          >
-            Engineering the Future of <br className="hidden sm:block" />
-            <span className="text-accent">Production</span>
-          </motion.h1>
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-            className="text-lg md:text-xl text-muted-foreground leading-relaxed"
-          >
-            Explore our state-of-the-art facilities, next-generation automation technologies, and the rigorous processes that drive our operational excellence.
-          </motion.p>
-        </Container>
-      </section>
-
-      {/* Production Capabilities */}
-      <section className="py-24 bg-secondary/5">
-        <Container>
-          <SectionHeader
-            title="Core Capabilities"
-            description="Our facilities are equipped with the most advanced technologies in the apparel sector."
-            align="center"
-          />
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-16">
-            {CAPABILITIES.map((cap, i) => (
-              <motion.div
-                key={cap.id}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-              >
-                <CapabilityCard
-                  title={cap.title}
-                  description={cap.description}
-                  icon={i % 2 === 0 ? <Factory className="w-6 h-6 text-accent" /> : <Cpu className="w-6 h-6 text-accent" />}
-                />
-              </motion.div>
-            ))}
-          </div>
-        </Container>
-      </section>
-
-      {/* Machinery & Technology */}
-      <section className="py-24 bg-background">
-        <Container>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-            >
-              <h2 className="text-3xl md:text-4xl font-bold font-heading mb-6">Advanced Machinery & Technology</h2>
-              <p className="text-lg text-muted-foreground mb-8 leading-relaxed">
-                We continuously reinvest in our infrastructure, deploying proprietary IoT sensors, robotic manipulation arms, and predictive maintenance algorithms across all production lines.
-              </p>
-              <ul className="space-y-4">
-                <li className="flex items-center gap-3 text-foreground">
-                  <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center">
-                    <Settings className="w-4 h-4 text-accent" />
-                  </div>
-                  Fully digitized supply chain tracking
-                </li>
-                <li className="flex items-center gap-3 text-foreground">
-                  <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center">
-                    <TrendingUp className="w-4 h-4 text-accent" />
-                  </div>
-                  Predictive AI for machine maintenance
-                </li>
-                <li className="flex items-center gap-3 text-foreground">
-                  <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center">
-                    <Search className="w-4 h-4 text-accent" />
-                  </div>
-                  Real-time yield optimization software
-                </li>
-              </ul>
-            </motion.div>
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              className="relative h-[400px] rounded-3xl overflow-hidden shadow-2xl"
-            >
-              <img src={heroImage} alt="Machinery" className="w-full h-full object-cover" />
-            </motion.div>
-          </div>
-        </Container>
-      </section>
-
-      {/* Statistics */}
-      <section className="py-24 bg-secondary text-secondary-foreground">
-        <Container>
-          <SectionHeader
-            title="Operational Scale"
-            description="Delivering unparalleled volume without compromising on quality or speed."
-            align="center"
-          />
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mt-16">
-            {STATISTICS.map((stat, i) => (
-              <motion.div
-                key={stat.label}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-              >
-                <StatisticCard
-                  value={stat.value}
-                  label={stat.label}
-                  description={stat.description}
-                />
-              </motion.div>
-            ))}
-          </div>
-        </Container>
-      </section>
-
-      {/* Quality Assurance */}
-      <section className="py-24 bg-background">
-        <Container className="text-center max-w-3xl mx-auto">
-          <ShieldCheck className="w-16 h-16 text-accent mx-auto mb-6" />
-          <h2 className="text-3xl md:text-4xl font-bold font-heading mb-6">Uncompromising Quality Assurance</h2>
-          <p className="text-lg text-muted-foreground leading-relaxed">
-            Every garment that leaves our facilities passes through a rigorous 14-point inspection protocol, combining automated AI scanning with expert human verification to guarantee perfection.
+    <div className="w-full font-sans bg-white pt-24 pb-0">
+      
+      {/* 1. Hero Section */}
+      <section className="bg-white py-16 md:py-24">
+        <div className="container mx-auto px-4 md:px-8 text-center max-w-4xl">
+          <p className="text-[#0047ff] font-bold text-xs uppercase tracking-widest mb-6">Vertical Integration</p>
+          <h1 className="text-5xl md:text-7xl font-bold text-black leading-[1.1] mb-8">
+            End-to-End Manufacturing Capabilities
+          </h1>
+          <p className="text-xl text-gray-500 leading-relaxed mb-12">
+            We control every node of the supply chain—from yarn sourcing to final dispatch—ensuring uncompromising quality, agility, and ethical compliance at industrial scale.
           </p>
-        </Container>
+        </div>
       </section>
 
-      {/* CTA Section */}
-      <CTASection
-        headline="Ready to scale your production?"
-        description="Partner with us to leverage our advanced manufacturing capabilities and bring your designs to market faster."
-        primaryCtaText="Contact Sales"
-        secondaryCtaText="View Certifications"
-      />
+      {/* 2. Hero Image Banner */}
+      <section className="container mx-auto px-4 md:px-8 pb-24">
+        <div className="w-full h-[600px] rounded-3xl overflow-hidden relative">
+          <img src={heroImage} alt="Factory Machinery" className="w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+          <div className="absolute bottom-12 left-12 right-12 flex justify-between items-end">
+             <div className="text-white">
+                <p className="text-sm font-bold uppercase tracking-widest text-white/70 mb-2">Facility Overview</p>
+                <h3 className="text-3xl font-bold">1.2 Million Sq.Ft of Advanced Production Space</h3>
+             </div>
+             <Button className="bg-white text-black hover:bg-gray-100 rounded-full font-bold px-8">
+               Take a Virtual Tour
+             </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* 3. Core Capabilities Grid */}
+      <section className="py-24 bg-[#f8f9fa] border-t border-gray-200">
+        <div className="container mx-auto px-4 md:px-8">
+          <div className="flex flex-col md:flex-row justify-between items-end mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold text-black max-w-md">Our Core Infrastructure</h2>
+            <p className="text-gray-500 max-w-sm text-right hidden md:block">
+              Equipped with latest-generation technology from Germany, Japan, and South Korea.
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-16">
+            {CAPABILITIES.map((cap, i) => (
+              <div key={i} className="flex flex-col relative group cursor-pointer">
+                <div className="w-16 h-16 rounded-xl bg-white shadow-md border border-gray-100 flex items-center justify-center text-[#0047ff] mb-6 group-hover:scale-110 group-hover:bg-[#0047ff] group-hover:text-white transition-all duration-300">
+                  <cap.icon className="w-8 h-8" />
+                </div>
+                <h3 className="text-2xl font-bold text-black mb-4">{cap.title}</h3>
+                <p className="text-gray-500 leading-relaxed">{cap.desc}</p>
+                <div className="mt-6 flex items-center text-[#0047ff] font-bold text-sm uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity translate-y-2 group-hover:translate-y-0">
+                  Explore <ArrowRight className="w-4 h-4 ml-2" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* 4. Deep Dive: Circular Knitting */}
+      <section className="py-0 bg-white relative">
+         <div className="grid grid-cols-1 lg:grid-cols-2">
+            <div className="p-12 md:p-24 lg:p-32 flex flex-col justify-center bg-[#0a1128] text-white">
+               <p className="text-[#4d79ff] font-bold text-xs uppercase tracking-widest mb-6">Process Spotlight</p>
+               <h2 className="text-4xl md:text-5xl font-bold mb-8">Circular Knitting Complex</h2>
+               <p className="text-gray-400 text-lg leading-relaxed mb-12">
+                 Our knitting facility houses over 350 high-speed circular and flat knitting machines, capable of producing complex jacquards, fine-gauge interlocks, and performance fleece with unparalleled consistency.
+               </p>
+               <div className="space-y-6">
+                 <div className="flex justify-between border-b border-white/10 pb-4">
+                   <span className="text-gray-400 font-bold uppercase tracking-widest text-sm">Daily Capacity</span>
+                   <span className="font-mono text-xl font-bold text-white">45,000 kg</span>
+                 </div>
+                 <div className="flex justify-between border-b border-white/10 pb-4">
+                   <span className="text-gray-400 font-bold uppercase tracking-widest text-sm">Machine Types</span>
+                   <span className="font-mono text-xl font-bold text-white">Mayer & Cie / Pailung</span>
+                 </div>
+                 <div className="flex justify-between border-b border-white/10 pb-4">
+                   <span className="text-gray-400 font-bold uppercase tracking-widest text-sm">Gauges Available</span>
+                   <span className="font-mono text-xl font-bold text-white">12G - 32G</span>
+                 </div>
+               </div>
+            </div>
+            <div className="relative min-h-[500px]">
+               <img src={heroImage} alt="Circular Knitting" className="absolute inset-0 w-full h-full object-cover" />
+            </div>
+         </div>
+      </section>
+      
     </div>
   );
 }

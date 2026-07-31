@@ -8,6 +8,7 @@ import { Sustainability } from '@/pages/Sustainability';
 import { Certifications } from '@/pages/Certifications';
 import { Login } from '@/pages/Login';
 import { Signup } from '@/pages/Signup';
+import { About } from '@/pages/About';
 
 export const router = createBrowserRouter([
   {
@@ -17,6 +18,10 @@ export const router = createBrowserRouter([
       {
         index: true,
         element: <Home />,
+      },
+      {
+        path: 'about',
+        element: <About />,
       },
       {
         path: 'products',

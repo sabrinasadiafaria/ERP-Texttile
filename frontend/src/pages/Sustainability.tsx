@@ -1,192 +1,118 @@
-import { motion } from 'framer-motion';
-import { Container } from '@/components/ui/Container';
-import { SectionHeader } from '@/components/ui/SectionHeader';
-import { CTASection } from '@/components/ui/CTASection';
-import { StatisticCard } from '@/components/ui/StatisticCard';
-import { Leaf, Recycle, Droplets, Sun, Wind, Battery } from 'lucide-react';
 import heroImage from '@/assets/hero.png';
+import { Leaf, Droplet, Sun, Recycle } from 'lucide-react';
 
-// Mock Data
-const PILLARS = [
+const INITIATIVES = [
   {
-    id: '1',
-    title: 'Zero Waste Manufacturing',
-    description: 'Our proprietary AutoCut system optimizes fabric usage, and all remaining textiles are recycled or upcycled.',
-    icon: <Recycle className="w-6 h-6 text-accent" />
+    title: 'Zero Discharge of Hazardous Chemicals',
+    desc: 'Committed to ZDHC MRSL guidelines. 100% of our dyes are heavy-metal free and Azo compliant.',
+    icon: Droplet,
   },
   {
-    id: '2',
-    title: 'Water Stewardship',
-    description: 'Closed-loop water recycling systems in our dyeing facilities reduce freshwater consumption by up to 85%.',
-    icon: <Droplets className="w-6 h-6 text-accent" />
+    title: 'Renewable Energy Integration',
+    desc: '60% of our power is generated via our 2MW rooftop solar installation, cutting 3,000 tons of CO2 annually.',
+    icon: Sun,
   },
   {
-    id: '3',
-    title: 'Renewable Energy',
-    description: 'Transitioning our global facilities to 100% renewable energy by 2030 through solar and wind investments.',
-    icon: <Sun className="w-6 h-6 text-accent" />
+    title: 'Circular Waste Management',
+    desc: '90% of fabric offcuts are repurposed into recycled yarn or donated for downcycling into industrial insulation.',
+    icon: Recycle,
   },
   {
-    id: '4',
-    title: 'Ethical Labor',
-    description: 'Ensuring fair wages, safe conditions, and continuous education for our 50,000+ workers worldwide.',
-    icon: <Leaf className="w-6 h-6 text-accent" />
+    title: 'Traceable Organic Fibers',
+    desc: 'GOTS certified supply chain ensuring our cotton is grown without synthetic pesticides or fertilizers.',
+    icon: Leaf,
   }
-];
-
-const METRICS = [
-  { label: 'Carbon Reduction', value: '42%', description: 'Since 2020 baseline' },
-  { label: 'Water Recycled', value: '85%', description: 'In our dyeing facilities' },
-  { label: 'Renewable Energy', value: '60%', description: 'Across all global hubs' },
-  { label: 'Waste to Landfill', value: '< 2%', description: 'Achieved through upcycling' }
 ];
 
 export function Sustainability() {
   return (
-    <div className="w-full">
-      {/* Hero Section */}
-      <section className="relative overflow-hidden bg-background pt-24 pb-16 md:pt-32 md:pb-24 border-b border-border/50">
-        <Container className="relative z-10 text-center max-w-4xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="flex justify-center mb-6"
-          >
-            <div className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center">
-              <Leaf className="w-8 h-8 text-accent" />
+    <div className="w-full font-sans bg-[#0a0a0a] pt-24 pb-0 text-white">
+      
+      {/* 1. Hero Section */}
+      <section className="py-16 md:py-24 relative overflow-hidden">
+        <div className="absolute inset-0 bg-[#07593c]/20 z-0" />
+        <div className="container mx-auto px-4 md:px-8 text-center max-w-4xl relative z-10">
+          <p className="text-[#33cc80] font-bold text-xs uppercase tracking-widest mb-6">Our Commitment</p>
+          <h1 className="text-5xl md:text-7xl font-bold leading-[1.1] mb-8 text-white">
+            Manufacturing with a Conscience
+          </h1>
+          <p className="text-xl text-gray-400 leading-relaxed mb-12">
+            Sustainability isn't a department; it's our operating system. We are systematically dismantling the linear "take-make-dispose" model in favor of a restorative, circular supply chain.
+          </p>
+        </div>
+      </section>
+
+      {/* 2. Impact Metrics */}
+      <section className="bg-[#111111] py-16 border-y border-white/10">
+        <div className="container mx-auto px-4 md:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 text-center divide-y md:divide-y-0 md:divide-x divide-white/10">
+            <div className="py-4">
+              <span className="block text-5xl font-bold text-[#33cc80] mb-2">95%</span>
+              <span className="text-xs uppercase tracking-widest text-gray-500 font-semibold">Water Recycled</span>
             </div>
-          </motion.div>
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-            className="text-4xl md:text-5xl lg:text-6xl font-bold font-heading tracking-tight text-foreground mb-6"
-          >
-            Manufacturing with a <br className="hidden sm:block" />
-            <span className="text-accent">Conscience</span>
-          </motion.h1>
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="text-lg md:text-xl text-muted-foreground leading-relaxed"
-          >
-            We believe that large-scale production shouldn't come at the expense of our planet. TextTile is committed to pioneering sustainable practices across the entire apparel supply chain.
-          </motion.p>
-        </Container>
-      </section>
-
-      {/* Vision / Intro Split */}
-      <section className="py-24 bg-background">
-        <Container>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              className="relative h-[500px] rounded-3xl overflow-hidden shadow-2xl"
-            >
-              <img src={heroImage} alt="Sustainability Vision" className="w-full h-full object-cover" />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-              <div className="absolute bottom-8 left-8 right-8">
-                <p className="text-white text-xl font-medium font-heading">"Our goal is not just to reduce harm, but to actively regenerate the ecosystems we operate in."</p>
-              </div>
-            </motion.div>
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-            >
-              <h2 className="text-3xl md:text-4xl font-bold font-heading mb-6">Our 2030 Vision</h2>
-              <p className="text-lg text-muted-foreground mb-6 leading-relaxed">
-                Sustainability is embedded into the core architecture of our ERP platform. By digitizing the supply chain, we eliminate inefficiencies that traditionally lead to massive industrial waste.
-              </p>
-              <p className="text-lg text-muted-foreground mb-8 leading-relaxed">
-                Beyond software, our physical facilities operate under strict environmental guidelines. We are systematically replacing legacy machinery with energy-efficient alternatives and transitioning completely to renewable power sources.
-              </p>
-              <div className="grid grid-cols-2 gap-6">
-                <div className="flex flex-col space-y-2">
-                  <Wind className="w-6 h-6 text-accent" />
-                  <span className="font-semibold">Carbon Neutral</span>
-                  <span className="text-sm text-muted-foreground">Targeting Scope 1 & 2 emissions by 2028.</span>
-                </div>
-                <div className="flex flex-col space-y-2">
-                  <Battery className="w-6 h-6 text-accent" />
-                  <span className="font-semibold">Energy Efficient</span>
-                  <span className="text-sm text-muted-foreground">Smart factories powered by green tech.</span>
-                </div>
-              </div>
-            </motion.div>
+            <div className="py-4">
+              <span className="block text-5xl font-bold text-[#33cc80] mb-2">60%</span>
+              <span className="text-xs uppercase tracking-widest text-gray-500 font-semibold">Solar Powered</span>
+            </div>
+            <div className="py-4">
+              <span className="block text-5xl font-bold text-[#33cc80] mb-2">1M+</span>
+              <span className="text-xs uppercase tracking-widest text-gray-500 font-semibold">Trees Planted</span>
+            </div>
+            <div className="py-4">
+              <span className="block text-5xl font-bold text-[#33cc80] mb-2">0</span>
+              <span className="text-xs uppercase tracking-widest text-gray-500 font-semibold">Waste to Landfill</span>
+            </div>
           </div>
-        </Container>
+        </div>
       </section>
 
-      {/* Key Pillars */}
-      <section className="py-24 bg-secondary/5">
-        <Container>
-          <SectionHeader
-            title="Sustainability Pillars"
-            description="The four foundational principles guiding our environmental and social governance."
-            align="center"
-          />
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-16">
-            {PILLARS.map((pillar, i) => (
-              <motion.div
-                key={pillar.id}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-              >
-                <div className="bg-card p-8 rounded-3xl border border-border/50 shadow-soft h-full hover:shadow-lg transition-shadow">
-                  <div className="w-12 h-12 rounded-full bg-secondary/10 flex items-center justify-center mb-6">
-                    {pillar.icon}
-                  </div>
-                  <h4 className="text-xl font-bold font-heading mb-3">{pillar.title}</h4>
-                  <p className="text-muted-foreground leading-relaxed">{pillar.description}</p>
+      {/* 3. Core Initiatives Grid */}
+      <section className="py-24">
+        <div className="container mx-auto px-4 md:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold mb-6">Strategic Initiatives</h2>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {INITIATIVES.map((init, i) => (
+              <div key={i} className="bg-[#1a1a1a] p-12 rounded-2xl border border-white/5 hover:border-[#33cc80]/30 transition-colors">
+                <div className="w-16 h-16 rounded-xl bg-[#07593c]/30 text-[#33cc80] flex items-center justify-center mb-8">
+                  <init.icon className="w-8 h-8" />
                 </div>
-              </motion.div>
+                <h3 className="text-2xl font-bold mb-4">{init.title}</h3>
+                <p className="text-gray-400 leading-relaxed text-lg">{init.desc}</p>
+              </div>
             ))}
           </div>
-        </Container>
+        </div>
       </section>
 
-      {/* Metrics */}
-      <section className="py-24 bg-secondary text-secondary-foreground">
-        <Container>
-          <SectionHeader
-            title="Measuring Impact"
-            description="We believe in transparency. Here is our progress toward our 2030 sustainability targets."
-            align="center"
-          />
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mt-16">
-            {METRICS.map((stat, i) => (
-              <motion.div
-                key={stat.label}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-              >
-                <StatisticCard
-                  value={stat.value}
-                  label={stat.label}
-                  description={stat.description}
-                />
-              </motion.div>
-            ))}
-          </div>
-        </Container>
+      {/* 4. Effluent Treatment Plant */}
+      <section className="py-0 relative bg-black">
+         <div className="grid grid-cols-1 lg:grid-cols-2">
+            <div className="relative min-h-[500px]">
+               <img src={heroImage} alt="Water Treatment" className="absolute inset-0 w-full h-full object-cover opacity-80" />
+            </div>
+            <div className="p-12 md:p-24 flex flex-col justify-center bg-[#07593c] text-white">
+               <p className="text-green-300 font-bold text-xs uppercase tracking-widest mb-6">Facility Spotlight</p>
+               <h2 className="text-4xl md:text-5xl font-bold mb-8">Biological ETP</h2>
+               <p className="text-white/80 text-lg leading-relaxed mb-12">
+                 Our biological Effluent Treatment Plant treats 4,000 cubic meters of wastewater daily. Through advanced reverse osmosis, we recover and reuse 95% of the water back into our dyeing processes, leaving the remaining 5% clean enough to sustain local aquatic life.
+               </p>
+               <div className="space-y-6">
+                 <div className="flex justify-between border-b border-white/20 pb-4">
+                   <span className="text-green-200 font-bold uppercase tracking-widest text-sm">Treatment Capacity</span>
+                   <span className="font-mono text-xl font-bold text-white">4,000 m³/day</span>
+                 </div>
+                 <div className="flex justify-between border-b border-white/20 pb-4">
+                   <span className="text-green-200 font-bold uppercase tracking-widest text-sm">Recovery Rate</span>
+                   <span className="font-mono text-xl font-bold text-white">95%</span>
+                 </div>
+               </div>
+            </div>
+         </div>
       </section>
 
-      {/* CTA Section */}
-      <CTASection
-        headline="Join the Green Revolution"
-        description="Discover how our Green Module can help your brand track emissions, ensure ethical sourcing, and achieve compliance."
-        primaryCtaText="Explore Green Module"
-        secondaryCtaText="Read CSR Report"
-      />
     </div>
   );
 }

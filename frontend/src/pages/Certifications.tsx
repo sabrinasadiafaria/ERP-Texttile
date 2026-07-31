@@ -1,165 +1,116 @@
-import { motion } from 'framer-motion';
-import { Container } from '@/components/ui/Container';
-import { SectionHeader } from '@/components/ui/SectionHeader';
-import { CTASection } from '@/components/ui/CTASection';
-import { CertificationCard } from '@/components/ui/CertificationCard';
-import { Shield, Award, CheckCircle } from 'lucide-react';
+import { ShieldCheck, FileText, Globe2, Award, Download } from 'lucide-react';
+import { Button } from '@/components/ui/Button';
 
-// Mock Data
 const CERTIFICATIONS = [
   {
-    title: 'ISO 9001:2015',
-    organization: 'International Organization for Standardization',
-    description: 'Certified for Quality Management Systems across all global manufacturing facilities.',
-  },
-  {
-    title: 'ISO 14001:2015',
-    organization: 'International Organization for Standardization',
-    description: 'Certified for Environmental Management Systems and sustainable operational practices.',
-  },
-  {
-    title: 'SA8000',
-    organization: 'Social Accountability International',
-    description: 'Certified for fair labor practices, safe working conditions, and ethical compliance.',
-  },
-  {
     title: 'OEKO-TEX® Standard 100',
-    organization: 'OEKO-TEX Association',
-    description: 'Ensuring all textiles and fabrics are free from harmful substances and safe for human use.',
+    category: 'Product Safety',
+    desc: 'Certifies that all components of our products are tested for harmful substances and are harmless to human ecological health.',
+    valid: '2025',
+    icon: ShieldCheck,
   },
   {
-    title: 'GOTS',
-    organization: 'Global Organic Textile Standard',
-    description: 'Certified organic status of textiles, from harvesting of raw materials through manufacturing.',
+    title: 'GOTS (Global Organic Textile Standard)',
+    category: 'Organic Integrity',
+    desc: 'The worldwide leading textile processing standard for organic fibers, including ecological and social criteria, backed by independent certification.',
+    valid: '2025',
+    icon: Globe2,
   },
   {
-    title: 'Bluesign® System Partner',
-    organization: 'Bluesign Technologies',
-    description: 'Commitment to sustainable chemistry, clean processes, and worker safety.',
+    title: 'BSCI (Business Social Compliance Initiative)',
+    category: 'Social Compliance',
+    desc: 'Ensures the continuous improvement of social performance in our supply chain, focusing on labor rights, health, and safety.',
+    valid: '2025',
+    icon: Award,
+  },
+  {
+    title: 'ISO 9001:2015',
+    category: 'Quality Management',
+    desc: 'International standard for quality management systems. Demonstrates our ability to consistently provide products that meet customer and regulatory requirements.',
+    valid: '2026',
+    icon: FileText,
+  },
+  {
+    title: 'WRAP (Worldwide Responsible Accredited Production)',
+    category: 'Ethical Production',
+    desc: 'Gold certificate demonstrating our commitment to safe, lawful, humane, and ethical manufacturing practices.',
+    valid: '2025',
+    icon: Award,
+  },
+  {
+    title: 'GRS (Global Recycled Standard)',
+    category: 'Environmental',
+    desc: 'Verifies the recycled content of our products and responsible social, environmental, and chemical practices in their production.',
+    valid: '2025',
+    icon: Globe2,
   }
 ];
 
 export function Certifications() {
   return (
-    <div className="w-full">
-      {/* Hero Section */}
-      <section className="relative overflow-hidden bg-background pt-24 pb-16 md:pt-32 md:pb-24 border-b border-border/50">
-        <Container className="relative z-10 text-center max-w-4xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="flex justify-center mb-6"
-          >
-            <div className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center">
-              <Award className="w-8 h-8 text-accent" />
-            </div>
-          </motion.div>
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-            className="text-4xl md:text-5xl lg:text-6xl font-bold font-heading tracking-tight text-foreground mb-6"
-          >
-            Verified <span className="text-accent">Excellence</span>
-          </motion.h1>
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="text-lg md:text-xl text-muted-foreground leading-relaxed"
-          >
-            Our commitment to quality, environmental responsibility, and ethical labor is backed by the world's most rigorous certification bodies.
-          </motion.p>
-        </Container>
+    <div className="w-full font-sans bg-[#f4f5f7] pt-24 pb-24 text-black">
+      
+      {/* 1. Hero Section */}
+      <section className="py-16 md:py-24">
+        <div className="container mx-auto px-4 md:px-8 max-w-5xl text-center">
+          <p className="text-[#0047ff] font-bold text-xs uppercase tracking-widest mb-6">Compliance & Standards</p>
+          <h1 className="text-5xl md:text-7xl font-bold leading-[1.1] mb-8">
+            Global Certifications
+          </h1>
+          <p className="text-xl text-gray-600 leading-relaxed max-w-3xl mx-auto mb-12">
+            Transparency is the foundation of trust. Our facilities and products are independently audited by the world's most rigorous regulatory bodies, ensuring every garment we produce meets the highest global standards for quality, ethics, and sustainability.
+          </p>
+          <Button className="bg-black hover:bg-black/80 text-white rounded-md font-bold px-8 py-6 flex items-center mx-auto gap-2">
+            <Download className="w-5 h-5" /> Download Compliance Audit Report
+          </Button>
+        </div>
       </section>
 
-      {/* Grid Section */}
-      <section className="py-24 bg-secondary/5">
-        <Container>
-          <SectionHeader
-            title="Industry Certifications"
-            description="Explore the standards we adhere to across our global operations."
-            align="center"
-          />
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-16">
+      {/* 2. Grid */}
+      <section className="py-12">
+        <div className="container mx-auto px-4 md:px-8 max-w-7xl">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {CERTIFICATIONS.map((cert, i) => (
-              <motion.div
-                key={cert.title}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-              >
-                <CertificationCard
-                  name={cert.title}
-                  organization={cert.organization}
-                  description={cert.description}
-                />
-              </motion.div>
+              <div key={i} className="bg-white p-10 rounded-2xl border border-gray-200 shadow-sm hover:shadow-xl transition-shadow relative overflow-hidden group">
+                {/* Background decorative icon */}
+                <cert.icon className="absolute -right-8 -bottom-8 w-48 h-48 text-gray-50 opacity-0 group-hover:opacity-100 transition-opacity duration-500" strokeWidth={1} />
+                
+                <div className="relative z-10 flex flex-col h-full">
+                  <div className="w-14 h-14 bg-blue-50 text-[#0047ff] rounded-xl flex items-center justify-center mb-6">
+                    <cert.icon className="w-7 h-7" />
+                  </div>
+                  <p className="text-xs font-bold tracking-widest uppercase text-gray-400 mb-2">{cert.category}</p>
+                  <h3 className="text-2xl font-bold mb-4">{cert.title}</h3>
+                  <p className="text-gray-500 leading-relaxed mb-8 flex-1">{cert.desc}</p>
+                  
+                  <div className="flex items-center justify-between pt-6 border-t border-gray-100">
+                    <div>
+                      <p className="text-[10px] uppercase tracking-widest font-bold text-gray-400 mb-1">Valid Through</p>
+                      <p className="font-mono font-bold text-black">{cert.valid}</p>
+                    </div>
+                    <button className="text-xs font-bold uppercase tracking-widest text-[#0047ff] hover:text-blue-800 transition-colors">
+                      View Certificate
+                    </button>
+                  </div>
+                </div>
+              </div>
             ))}
           </div>
-        </Container>
+        </div>
       </section>
 
-      {/* Quality Commitment Section */}
-      <section className="py-24 bg-background">
-        <Container>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-            >
-              <h2 className="text-3xl md:text-4xl font-bold font-heading mb-6">Our Commitment to Quality</h2>
-              <p className="text-lg text-muted-foreground mb-8 leading-relaxed">
-                Compliance is just the baseline. At TextTile, we build compliance tracking directly into our ERP software, ensuring that every factory on our network maintains real-time audit readiness.
-              </p>
-              <ul className="space-y-4">
-                <li className="flex items-center gap-3 text-foreground">
-                  <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center shrink-0">
-                    <CheckCircle className="w-4 h-4 text-accent" />
-                  </div>
-                  Real-time compliance monitoring
-                </li>
-                <li className="flex items-center gap-3 text-foreground">
-                  <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center shrink-0">
-                    <CheckCircle className="w-4 h-4 text-accent" />
-                  </div>
-                  Automated audit reporting
-                </li>
-                <li className="flex items-center gap-3 text-foreground">
-                  <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center shrink-0">
-                    <CheckCircle className="w-4 h-4 text-accent" />
-                  </div>
-                  Strict supplier vetting processes
-                </li>
-              </ul>
-            </motion.div>
-            
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              className="bg-card p-10 rounded-3xl shadow-xl border border-border/50 text-center"
-            >
-              <Shield className="w-16 h-16 text-accent mx-auto mb-6" />
-              <h3 className="text-2xl font-bold font-heading mb-4">Enterprise Grade Security</h3>
-              <p className="text-muted-foreground leading-relaxed">
-                In addition to manufacturing standards, TextTile ERP holds strict SOC 2 Type II and ISO 27001 certifications, ensuring your proprietary supply chain data remains encrypted and secure at all times.
-              </p>
-            </motion.div>
-          </div>
-        </Container>
+      {/* 3. Assurance Footer */}
+      <section className="py-16">
+        <div className="container mx-auto px-4 md:px-8 max-w-4xl text-center">
+           <div className="bg-white p-12 rounded-3xl border border-gray-200 shadow-sm flex flex-col items-center">
+             <ShieldCheck className="w-16 h-16 text-[#0047ff] mb-6" />
+             <h3 className="text-2xl font-bold mb-4">Continuous Monitoring</h3>
+             <p className="text-gray-500 mb-8 max-w-xl">Our dedicated compliance team conducts daily internal audits alongside annual independent assessments to ensure zero-tolerance adherence to all international labor and safety laws.</p>
+             <p className="font-mono text-sm font-bold">compliance@alaminexport.com</p>
+           </div>
+        </div>
       </section>
 
-      {/* CTA Section */}
-      <CTASection
-        headline="Require specific compliance documentation?"
-        description="Our compliance team can provide detailed audit reports and certification records for all of our global facilities upon request."
-        primaryCtaText="Request Documentation"
-        secondaryCtaText="Contact Compliance"
-      />
     </div>
   );
 }
