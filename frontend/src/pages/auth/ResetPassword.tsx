@@ -3,13 +3,14 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Link, useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/Button';
 import { supabase } from '@/lib/supabase';
-import { Loader2 } from 'lucide-react';
+import { AuthLayout } from '@/components/layout/AuthLayout';
+import { Lock, Eye, EyeOff, Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const resetPasswordSchema = z.object({
   password: z.string().min(8, 'Password must be at least 8 characters'),
-  confirmPassword: z.string(),
+  confirmPassword: z.string()
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
   path: ["confirmPassword"],
@@ -21,16 +22,44 @@ export function ResetPassword() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(true);
+  
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Check if we have an active session or a recovery token in the URL
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session && !window.location.hash.includes('type=recovery')) {
-        navigate('/login');
+    // Check if we have a valid session (from the reset link)
+    const checkSession = async () => {
+      const { data: { session }, error } = await supabase.auth.getSession();
+      
+      if (error || !session) {
+        // We might need to handle the hash fragments if Supabase hasn't processed them yet
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+          if (event === 'PASSWORD_RECOVERY' || (event === 'SIGNED_IN' && session)) {
+            setIsVerifying(false);
+          } else if (!session) {
+            setError("Invalid or expired reset link. Please request a new one.");
+            setIsVerifying(false);
+          }
+        });
+        
+        // If after a short timeout we still don't have a session or event, assume invalid
+        setTimeout(() => {
+          if (isVerifying) {
+             setError("Invalid or expired reset link. Please request a new one.");
+             setIsVerifying(false);
+          }
+        }, 3000);
+
+        return () => subscription.unsubscribe();
+      } else {
+        setIsVerifying(false);
       }
-    });
-  }, [navigate]);
+    };
+    
+    checkSession();
+  }, [isVerifying]);
 
   const { register, handleSubmit, formState: { errors } } = useForm<ResetPasswordFormValues>({
     resolver: zodResolver(resetPasswordSchema),
@@ -50,70 +79,155 @@ export function ResetPassword() {
     } else {
       setSuccess(true);
       setIsLoading(false);
+      
+      // Auto redirect to login after a few seconds
       setTimeout(() => navigate('/login'), 3000);
     }
   };
 
-  if (success) {
+  if (isVerifying) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8 font-sans">
-        <div className="max-w-md w-full bg-white p-8 rounded-2xl shadow-sm border border-gray-100 text-center">
-          <h2 className="text-2xl font-bold text-green-600 mb-4">Password Updated</h2>
-          <p className="text-gray-600 mb-6">Your password has been successfully reset. You will be redirected to the login page momentarily.</p>
-          <Link to="/login">
-            <Button className="bg-black text-white px-8">Return to Login</Button>
+      <AuthLayout
+        title="Verifying Link"
+        subtitle="Please wait while we verify your request"
+      >
+        <div className="flex flex-col items-center justify-center py-12">
+          <Loader2 className="w-8 h-8 animate-spin text-slate-400 mb-4" />
+          <p className="text-slate-500 text-sm">Authenticating your secure session...</p>
+        </div>
+      </AuthLayout>
+    );
+  }
+
+  if (error && !success) {
+    return (
+      <AuthLayout
+        title="Link Expired"
+        subtitle="The password reset link is invalid or has expired"
+      >
+        <div className="flex flex-col py-4">
+          <div className="w-12 h-12 bg-red-50 rounded-full flex items-center justify-center mb-6">
+            <AlertCircle className="w-6 h-6 text-red-600" />
+          </div>
+          <p className="text-slate-600 text-sm mb-8 leading-relaxed">
+            {error}
+          </p>
+          <Link to="/forgot-password" className="w-full">
+            <button className="w-full bg-slate-900 hover:bg-slate-800 text-white rounded-xl py-2.5 px-4 font-semibold text-sm transition-colors">
+              Request New Link
+            </button>
           </Link>
         </div>
-      </div>
+      </AuthLayout>
+    );
+  }
+
+  if (success) {
+    return (
+      <AuthLayout
+        title="Password updated"
+        subtitle="Your account is now secure"
+      >
+        <div className="flex flex-col py-4">
+          <div className="w-12 h-12 bg-emerald-50 rounded-full flex items-center justify-center mb-6">
+            <CheckCircle2 className="w-6 h-6 text-emerald-600" />
+          </div>
+          <p className="text-slate-600 text-sm mb-8 leading-relaxed">
+            Your password has been successfully reset. You can now use your new password to sign in.
+          </p>
+          <Link to="/login" className="w-full">
+            <button className="w-full bg-slate-900 hover:bg-slate-800 text-white rounded-xl py-2.5 px-4 font-semibold text-sm transition-colors">
+              Return to Sign In
+            </button>
+          </Link>
+        </div>
+      </AuthLayout>
     );
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8 font-sans">
-      <div className="max-w-md w-full bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
-        <div className="text-center mb-8">
-          <h2 className="text-3xl font-bold text-black mb-2">Create New Password</h2>
-          <p className="text-gray-500 text-sm">Please enter your new password below.</p>
-        </div>
-
-        {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-100 text-red-600 text-sm rounded-lg text-center">
-            {error}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          <div>
-            <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">New Password</label>
+    <AuthLayout
+      title="Create new password"
+      subtitle="Please enter your new strong password below"
+    >
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+        {/* New Password Field */}
+        <div className="space-y-1.5">
+          <label className="block text-sm font-medium text-slate-700">
+            New password
+          </label>
+          <div className="relative group">
+            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-slate-600 transition-colors">
+              <Lock className="w-4 h-4" />
+            </div>
             <input
               {...register('password')}
-              type="password"
-              className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#0047ff]/20 focus:border-[#0047ff] transition-all"
+              type={showPassword ? 'text' : 'password'}
+              autoComplete="new-password"
+              className="w-full pl-10 pr-11 py-2.5 bg-white border border-slate-200 rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-400 focus:ring-4 focus:ring-slate-100 transition-all"
               placeholder="••••••••"
             />
-            {errors.password && <p className="mt-1 text-xs text-red-500">{errors.password.message}</p>}
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 transition-colors focus:outline-none"
+              aria-label={showPassword ? "Hide password" : "Show password"}
+            >
+              {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            </button>
           </div>
+          {errors.password && (
+            <p className="text-sm text-red-500 font-medium">
+              {errors.password.message}
+            </p>
+          )}
+        </div>
 
-          <div>
-            <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Confirm New Password</label>
+        {/* Confirm Password Field */}
+        <div className="space-y-1.5">
+          <label className="block text-sm font-medium text-slate-700">
+            Confirm password
+          </label>
+          <div className="relative group">
+            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-slate-600 transition-colors">
+              <Lock className="w-4 h-4" />
+            </div>
             <input
               {...register('confirmPassword')}
-              type="password"
-              className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#0047ff]/20 focus:border-[#0047ff] transition-all"
+              type={showConfirmPassword ? 'text' : 'password'}
+              autoComplete="new-password"
+              className="w-full pl-10 pr-11 py-2.5 bg-white border border-slate-200 rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-400 focus:ring-4 focus:ring-slate-100 transition-all"
               placeholder="••••••••"
             />
-            {errors.confirmPassword && <p className="mt-1 text-xs text-red-500">{errors.confirmPassword.message}</p>}
+            <button
+              type="button"
+              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 transition-colors focus:outline-none"
+              aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+            >
+              {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            </button>
           </div>
+          {errors.confirmPassword && (
+            <p className="text-sm text-red-500 font-medium">
+              {errors.confirmPassword.message}
+            </p>
+          )}
+        </div>
 
-          <Button 
-            type="submit" 
-            disabled={isLoading}
-            className="w-full bg-black text-white hover:bg-gray-800 rounded-lg py-3 font-bold uppercase tracking-widest text-xs flex justify-center items-center h-12"
-          >
-            {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Update Password'}
-          </Button>
-        </form>
-      </div>
-    </div>
+        {/* Submit Primary Button */}
+        <button
+          type="submit"
+          disabled={isLoading}
+          className="w-full mt-6 bg-slate-900 hover:bg-slate-800 text-white rounded-xl py-2.5 px-4 font-semibold text-sm shadow-sm transition-all disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center"
+        >
+          {isLoading ? (
+            <Loader2 className="w-5 h-5 animate-spin" />
+          ) : (
+            'Update password'
+          )}
+        </button>
+      </form>
+    </AuthLayout>
   );
 }

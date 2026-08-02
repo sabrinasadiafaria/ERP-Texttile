@@ -1,11 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Link, useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/Button';
 import { supabase } from '@/lib/supabase';
-import { Loader2 } from 'lucide-react';
+import { AuthLayout } from '@/components/layout/AuthLayout';
+import { Mail, Lock, Eye, EyeOff, Loader2, AlertCircle } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -17,15 +18,33 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 export function Login() {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const navigate = useNavigate();
 
-  const { register, handleSubmit, formState: { errors } } = useForm<LoginFormValues>({
+  const { register, handleSubmit, setValue, formState: { errors } } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
   });
+
+  // Load remembered email on component mount
+  useEffect(() => {
+    const savedEmail = localStorage.getItem('texttile_remember_email');
+    if (savedEmail) {
+      setValue('email', savedEmail);
+      setRememberMe(true);
+    }
+  }, [setValue]);
 
   const onSubmit = async (data: LoginFormValues) => {
     setIsLoading(true);
     setError(null);
+
+    // Save or clear remembered email
+    if (rememberMe) {
+      localStorage.setItem('texttile_remember_email', data.email);
+    } else {
+      localStorage.removeItem('texttile_remember_email');
+    }
     
     const { error } = await supabase.auth.signInWithPassword({
       email: data.email,
@@ -36,66 +55,149 @@ export function Login() {
       setError(error.message);
       setIsLoading(false);
     } else {
-      // AuthProvider will handle the redirect based on role
       navigate('/dashboard', { replace: true });
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8 font-sans">
-      <div className="max-w-md w-full bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
-        <div className="text-center mb-8">
-          <h2 className="text-3xl font-bold text-black mb-2">Welcome Back</h2>
-          <p className="text-gray-500 text-sm">Sign in to access the ERP dashboard</p>
-        </div>
-
+    <AuthLayout
+      title="Welcome back"
+      subtitle="Sign in to your account to continue"
+      bgImage="/login-bg.png"
+    >
+      {/* Error Alert */}
+      <AnimatePresence>
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-100 text-red-600 text-sm rounded-lg text-center">
-            {error}
-          </div>
+          <motion.div
+            initial={{ opacity: 0, y: -10, height: 0 }}
+            animate={{ opacity: 1, y: 0, height: 'auto' }}
+            exit={{ opacity: 0, y: -10, height: 0 }}
+            className="mb-6 p-3.5 rounded-xl bg-red-50 border border-red-100 text-red-600 text-sm flex items-start space-x-3"
+          >
+            <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5 text-red-500" />
+            <div className="flex-1 leading-snug">{error}</div>
+          </motion.div>
         )}
+      </AnimatePresence>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          <div>
-            <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Email Address</label>
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+        {/* Email Address Field */}
+        <div className="space-y-1.5">
+          <label className="block text-sm font-medium text-slate-700">
+            Email address
+          </label>
+          <div className="relative group">
+            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-slate-600 transition-colors">
+              <Mail className="w-4 h-4" />
+            </div>
             <input
               {...register('email')}
               type="email"
-              className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#0047ff]/20 focus:border-[#0047ff] transition-all"
-              placeholder="you@testtile.com"
+              autoComplete="email"
+              className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-400 focus:ring-4 focus:ring-slate-100 transition-all"
+              placeholder="you@example.com"
             />
-            {errors.email && <p className="mt-1 text-xs text-red-500">{errors.email.message}</p>}
           </div>
+          {errors.email && (
+            <p className="text-sm text-red-500 font-medium">
+              {errors.email.message}
+            </p>
+          )}
+        </div>
 
-          <div>
-            <div className="flex justify-between items-center mb-2">
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest">Password</label>
-              <Link to="/forgot-password" className="text-xs text-[#0047ff] hover:underline font-semibold">Forgot Password?</Link>
+        {/* Password Field */}
+        <div className="space-y-1.5">
+          <div className="flex justify-between items-center">
+            <label className="block text-sm font-medium text-slate-700">
+              Password
+            </label>
+            <Link 
+              to="/forgot-password" 
+              className="text-sm text-slate-500 hover:text-slate-900 font-medium transition-colors"
+            >
+              Forgot password?
+            </Link>
+          </div>
+          <div className="relative group">
+            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-slate-600 transition-colors">
+              <Lock className="w-4 h-4" />
             </div>
             <input
               {...register('password')}
-              type="password"
-              className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#0047ff]/20 focus:border-[#0047ff] transition-all"
+              type={showPassword ? 'text' : 'password'}
+              autoComplete="current-password"
+              className="w-full pl-10 pr-11 py-2.5 bg-white border border-slate-200 rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-400 focus:ring-4 focus:ring-slate-100 transition-all"
               placeholder="••••••••"
             />
-            {errors.password && <p className="mt-1 text-xs text-red-500">{errors.password.message}</p>}
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 transition-colors focus:outline-none"
+              aria-label={showPassword ? "Hide password" : "Show password"}
+            >
+              {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            </button>
           </div>
-
-          <Button 
-            type="submit" 
-            disabled={isLoading}
-            className="w-full bg-black text-white hover:bg-gray-800 rounded-lg py-3 font-bold uppercase tracking-widest text-xs flex justify-center items-center h-12"
-          >
-            {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Sign In'}
-          </Button>
-        </form>
-
-        <div className="mt-8 text-center">
-          <p className="text-sm text-gray-500">
-            Don't have an account? <Link to="/signup" className="text-[#0047ff] font-bold hover:underline">Request Access</Link>
-          </p>
+          {errors.password && (
+            <p className="text-sm text-red-500 font-medium">
+              {errors.password.message}
+            </p>
+          )}
         </div>
+
+        {/* Remember Me Option */}
+        <div className="flex items-center pt-1">
+          <label className="flex items-center space-x-2.5 cursor-pointer group">
+            <div className="relative flex items-center justify-center w-4 h-4">
+              <input
+                type="checkbox"
+                checked={rememberMe}
+                onChange={() => setRememberMe(!rememberMe)}
+                className="peer sr-only"
+              />
+              <div className="w-4 h-4 border border-slate-300 rounded peer-checked:bg-slate-900 peer-checked:border-slate-900 transition-colors group-hover:border-slate-400" />
+              <svg
+                className={`absolute w-3 h-3 text-white pointer-events-none transition-opacity ${rememberMe ? 'opacity-100' : 'opacity-0'}`}
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={3}
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <span className="text-sm font-medium text-slate-600 group-hover:text-slate-900 transition-colors">
+              Remember me
+            </span>
+          </label>
+        </div>
+
+        {/* Submit Primary Button */}
+        <button
+          type="submit"
+          disabled={isLoading}
+          className="w-full mt-4 bg-slate-900 hover:bg-slate-800 text-white rounded-xl py-2.5 px-4 font-semibold text-sm shadow-sm transition-all disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center"
+        >
+          {isLoading ? (
+            <Loader2 className="w-5 h-5 animate-spin" />
+          ) : (
+            'Sign In'
+          )}
+        </button>
+      </form>
+
+      {/* Switch to Signup */}
+      <div className="mt-8 text-center">
+        <p className="text-sm text-slate-500">
+          Don't have an account?{' '}
+          <Link 
+            to="/signup" 
+            className="text-slate-900 font-semibold hover:underline ml-1"
+          >
+            Sign up
+          </Link>
+        </p>
       </div>
-    </div>
+    </AuthLayout>
   );
 }
