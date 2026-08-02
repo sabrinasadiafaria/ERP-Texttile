@@ -3,9 +3,10 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Link } from 'react-router-dom';
-import { Button } from '@/components/ui/Button';
 import { supabase } from '@/lib/supabase';
-import { Loader2 } from 'lucide-react';
+import { AuthLayout } from '@/components/layout/AuthLayout';
+import { Mail, Loader2, AlertCircle, Send } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const forgotPasswordSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -40,59 +41,98 @@ export function ForgotPassword() {
 
   if (success) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8 font-sans">
-        <div className="max-w-md w-full bg-white p-8 rounded-2xl shadow-sm border border-gray-100 text-center">
-          <h2 className="text-2xl font-bold text-green-600 mb-4">Email Sent</h2>
-          <p className="text-gray-600 mb-6">Check your inbox for a link to reset your password. If it doesn't appear within a few minutes, check your spam folder.</p>
-          <Link to="/login">
-            <Button className="bg-black text-white px-8">Return to Login</Button>
+      <AuthLayout
+        title="Check your email"
+        subtitle="Password reset link sent successfully"
+      >
+        <div className="flex flex-col py-4">
+          <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mb-6">
+            <Send className="w-5 h-5 text-slate-600 -ml-1" />
+          </div>
+          <p className="text-slate-600 text-sm mb-8 leading-relaxed">
+            We've sent a password reset link to your email address. Please check your inbox and spam folder.
+          </p>
+          <Link to="/login" className="w-full">
+            <button className="w-full bg-slate-900 hover:bg-slate-800 text-white rounded-xl py-2.5 px-4 font-semibold text-sm transition-colors">
+              Return to Sign In
+            </button>
           </Link>
         </div>
-      </div>
+      </AuthLayout>
     );
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8 font-sans">
-      <div className="max-w-md w-full bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
-        <div className="text-center mb-8">
-          <h2 className="text-3xl font-bold text-black mb-2">Reset Password</h2>
-          <p className="text-gray-500 text-sm">Enter your email and we'll send you a link to reset your password.</p>
-        </div>
-
+    <AuthLayout
+      title="Reset password"
+      subtitle="Enter your email to receive a password reset link"
+    >
+      {/* Error Alert */}
+      <AnimatePresence>
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-100 text-red-600 text-sm rounded-lg text-center">
-            {error}
-          </div>
+          <motion.div
+            initial={{ opacity: 0, y: -10, height: 0 }}
+            animate={{ opacity: 1, y: 0, height: 'auto' }}
+            exit={{ opacity: 0, y: -10, height: 0 }}
+            className="mb-6 p-3.5 rounded-xl bg-red-50 border border-red-100 text-red-600 text-sm flex items-start space-x-3"
+          >
+            <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5 text-red-500" />
+            <div className="flex-1 leading-snug">{error}</div>
+          </motion.div>
         )}
+      </AnimatePresence>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          <div>
-            <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Email Address</label>
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+        {/* Email Address Field */}
+        <div className="space-y-1.5">
+          <label className="block text-sm font-medium text-slate-700">
+            Email address
+          </label>
+          <div className="relative group">
+            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-slate-600 transition-colors">
+              <Mail className="w-4 h-4" />
+            </div>
             <input
               {...register('email')}
               type="email"
-              className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#0047ff]/20 focus:border-[#0047ff] transition-all"
-              placeholder="you@testtile.com"
+              autoComplete="email"
+              className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-400 focus:ring-4 focus:ring-slate-100 transition-all"
+              placeholder="you@example.com"
             />
-            {errors.email && <p className="mt-1 text-xs text-red-500">{errors.email.message}</p>}
           </div>
-
-          <Button 
-            type="submit" 
-            disabled={isLoading}
-            className="w-full bg-black text-white hover:bg-gray-800 rounded-lg py-3 font-bold uppercase tracking-widest text-xs flex justify-center items-center h-12"
-          >
-            {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Send Reset Link'}
-          </Button>
-        </form>
-
-        <div className="mt-8 text-center">
-          <p className="text-sm text-gray-500">
-            Remembered your password? <Link to="/login" className="text-[#0047ff] font-bold hover:underline">Sign In</Link>
-          </p>
+          {errors.email && (
+            <p className="text-sm text-red-500 font-medium">
+              {errors.email.message}
+            </p>
+          )}
         </div>
+
+        {/* Submit Primary Button */}
+        <button
+          type="submit"
+          disabled={isLoading}
+          className="w-full mt-6 bg-slate-900 hover:bg-slate-800 text-white rounded-xl py-2.5 px-4 font-semibold text-sm shadow-sm transition-all disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center"
+        >
+          {isLoading ? (
+            <Loader2 className="w-5 h-5 animate-spin" />
+          ) : (
+            'Send reset link'
+          )}
+        </button>
+      </form>
+
+      {/* Switch to Login */}
+      <div className="mt-8 text-center">
+        <p className="text-sm text-slate-500">
+          Remember your password?{' '}
+          <Link 
+            to="/login" 
+            className="text-slate-900 font-semibold hover:underline ml-1"
+          >
+            Sign in
+          </Link>
+        </p>
       </div>
-    </div>
+    </AuthLayout>
   );
 }
