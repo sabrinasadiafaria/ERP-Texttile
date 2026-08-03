@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { MapPin, Phone, Mail, ArrowUp } from 'lucide-react';
 import { Container } from '@/components/ui/Container';
 import { Button } from '@/components/ui/Button';
@@ -7,13 +8,16 @@ function FooterBrand() {
   return (
     <div className="flex flex-col space-y-4">
       <Link to="/" className="flex items-center gap-2 group">
-        <div className="w-8 h-8 rounded bg-accent flex items-center justify-center text-accent-foreground font-bold text-xl group-hover:scale-105 transition-transform">
-          T
-        </div>
-        <span className="font-heading font-bold text-2xl tracking-tight text-secondary-foreground">TextTile</span>
+        <motion.div 
+          whileHover={{ scale: 1.08, rotate: 2 }}
+          className="w-8 h-8 rounded bg-accent flex items-center justify-center text-accent-foreground font-bold text-xl shadow-sm"
+        >
+          A
+        </motion.div>
+        <span className="font-heading font-bold text-2xl tracking-tight text-secondary-foreground">Al Amin Export Ltd.</span>
       </Link>
       <p className="text-secondary-foreground/70 text-sm leading-relaxed max-w-sm mt-4">
-        TextTile ERP is the leading software platform designed specifically for apparel manufacturing, empowering brands with precision, scale, and sustainability.
+        Al Amin Export Ltd. is a 100% export-oriented premium sweater and knitwear manufacturer, empowering leading international brands with precision, scale, and sustainability.
       </p>
     </div>
   );
@@ -23,7 +27,7 @@ function FooterNavigation() {
   const links = [
     { title: 'Products', items: [{ name: 'Core ERP', to: '/products' }, { name: 'AutoCut', to: '/products' }, { name: 'Green Module', to: '/products' }] },
     { title: 'Capabilities', items: [{ name: 'Smart Factories', to: '/capabilities' }, { name: 'Quality Control', to: '/capabilities' }, { name: 'Supply Chain', to: '/capabilities' }] },
-    { title: 'Company', items: [{ name: 'About Us', to: '/' }, { name: 'Sustainability', to: '/sustainability' }, { name: 'Certifications', to: '/certifications' }, { name: 'Contact', to: '/contact' }] }
+    { title: 'Company', items: [{ name: 'About Us', to: '/about' }, { name: 'Sustainability', to: '/sustainability' }, { name: 'Certifications', to: '/certifications' }, { name: 'Contact', to: '/contact' }] }
   ];
 
   return (
@@ -61,7 +65,7 @@ function FooterContact() {
         </li>
         <li className="flex items-center gap-3 text-sm text-secondary-foreground/70">
           <Mail className="w-5 h-5 text-accent shrink-0" />
-          <span>contact@texttile.com</span>
+          <span>partners@alaminexport.com</span>
         </li>
       </ul>
     </div>
@@ -115,14 +119,16 @@ function FooterSocialLinks() {
   return (
     <div className="flex items-center gap-4 mt-6">
       {socials.map((social, i) => (
-        <a
+        <motion.a
           key={i}
+          whileHover={{ scale: 1.15, y: -2 }}
+          whileTap={{ scale: 0.95 }}
           href={social.href}
-          className="w-10 h-10 rounded-full bg-secondary-foreground/10 flex items-center justify-center text-secondary-foreground/80 hover:bg-accent hover:text-accent-foreground transition-colors"
+          className="w-10 h-10 rounded-full bg-secondary-foreground/10 flex items-center justify-center text-secondary-foreground/80 hover:bg-accent hover:text-accent-foreground transition-colors shadow-sm"
           aria-label={social.name}
         >
           {social.icon}
-        </a>
+        </motion.a>
       ))}
     </div>
   );
@@ -136,7 +142,7 @@ function FooterBottom() {
   return (
     <div className="flex flex-col md:flex-row items-center justify-between pt-8 border-t border-secondary-foreground/20 mt-16 gap-4">
       <p className="text-sm text-secondary-foreground/50 text-center md:text-left">
-        &copy; {new Date().getFullYear()} TextTile ERP. All rights reserved.
+        &copy; {new Date().getFullYear()} Al Amin Export Ltd. All rights reserved.
       </p>
       
       <div className="flex items-center gap-6 text-sm text-secondary-foreground/50">
@@ -144,21 +150,29 @@ function FooterBottom() {
         <Link to="/terms" className="hover:text-secondary-foreground transition-colors">Terms of Service</Link>
       </div>
 
-      <Button
-        variant="outline"
-        onClick={scrollToTop}
-        className="rounded-full bg-secondary-foreground/10 hover:bg-accent hover:text-accent-foreground text-secondary-foreground/80 w-10 h-10 p-0"
-        aria-label="Back to top"
-      >
-        <ArrowUp className="w-5 h-5" />
-      </Button>
+      <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+        <Button
+          variant="outline"
+          onClick={scrollToTop}
+          className="rounded-full bg-secondary-foreground/10 hover:bg-accent hover:text-accent-foreground text-secondary-foreground/80 w-10 h-10 p-0"
+          aria-label="Back to top"
+        >
+          <ArrowUp className="w-5 h-5" />
+        </Button>
+      </motion.div>
     </div>
   );
 }
 
 export function Footer() {
   return (
-    <footer className="bg-secondary text-secondary-foreground mt-auto pt-20 pb-8">
+    <motion.footer 
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.6 }}
+      className="bg-secondary text-secondary-foreground mt-auto pt-20 pb-8 overflow-hidden"
+    >
       <Container>
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8">
           {/* Brand & Socials */}
@@ -180,6 +194,6 @@ export function Footer() {
 
         <FooterBottom />
       </Container>
-    </footer>
+    </motion.footer>
   );
 }

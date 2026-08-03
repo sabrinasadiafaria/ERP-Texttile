@@ -1,3 +1,4 @@
+import { motion } from 'framer-motion';
 import { ShieldCheck, FileText, Globe2, Award, Download } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 
@@ -48,22 +49,29 @@ const CERTIFICATIONS = [
 
 export function Certifications() {
   return (
-    <div className="w-full font-sans bg-[#f4f5f7] pt-24 pb-24 text-black">
+    <div className="w-full font-sans bg-[#f4f5f7] pt-24 pb-24 text-black overflow-hidden">
       
       {/* 1. Hero Section */}
       <section className="py-16 md:py-24">
-        <div className="container mx-auto px-4 md:px-8 max-w-5xl text-center">
-          <p className="text-[#0047ff] font-bold text-xs uppercase tracking-widest mb-6">Compliance & Standards</p>
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="container mx-auto px-4 md:px-8 max-w-5xl text-center"
+        >
+          <span className="text-[#0047ff] font-bold text-xs uppercase tracking-widest block mb-6">Compliance & Standards</span>
           <h1 className="text-5xl md:text-7xl font-bold leading-[1.1] mb-8">
             Global Certifications
           </h1>
           <p className="text-xl text-gray-600 leading-relaxed max-w-3xl mx-auto mb-12">
             Transparency is the foundation of trust. Our facilities and products are independently audited by the world's most rigorous regulatory bodies, ensuring every garment we produce meets the highest global standards for quality, ethics, and sustainability.
           </p>
-          <Button className="bg-black hover:bg-black/80 text-white rounded-md font-bold px-8 py-6 flex items-center mx-auto gap-2">
-            <Download className="w-5 h-5" /> Download Compliance Audit Report
-          </Button>
-        </div>
+          <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }} className="inline-block">
+            <Button className="bg-black hover:bg-black/80 text-white rounded-md font-bold px-8 py-6 flex items-center mx-auto gap-2 shadow-lg">
+              <Download className="w-5 h-5" /> Download Compliance Audit Report
+            </Button>
+          </motion.div>
+        </motion.div>
       </section>
 
       {/* 2. Grid */}
@@ -71,16 +79,24 @@ export function Certifications() {
         <div className="container mx-auto px-4 md:px-8 max-w-7xl">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {CERTIFICATIONS.map((cert, i) => (
-              <div key={i} className="bg-white p-10 rounded-2xl border border-gray-200 shadow-sm hover:shadow-xl transition-shadow relative overflow-hidden group">
+              <motion.div 
+                key={i} 
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: i * 0.08 }}
+                whileHover={{ y: -6 }}
+                className="bg-white p-10 rounded-2xl border border-gray-200 shadow-sm hover:shadow-xl transition-all duration-300 relative overflow-hidden group"
+              >
                 {/* Background decorative icon */}
-                <cert.icon className="absolute -right-8 -bottom-8 w-48 h-48 text-gray-50 opacity-0 group-hover:opacity-100 transition-opacity duration-500" strokeWidth={1} />
+                <cert.icon className="absolute -right-8 -bottom-8 w-48 h-48 text-gray-100 opacity-0 group-hover:opacity-100 transition-all duration-500 transform group-hover:scale-110" strokeWidth={1} />
                 
                 <div className="relative z-10 flex flex-col h-full">
-                  <div className="w-14 h-14 bg-blue-50 text-[#0047ff] rounded-xl flex items-center justify-center mb-6">
+                  <div className="w-14 h-14 bg-blue-50 text-[#0047ff] rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-[#0047ff] group-hover:text-white transition-all duration-300">
                     <cert.icon className="w-7 h-7" />
                   </div>
                   <p className="text-xs font-bold tracking-widest uppercase text-gray-400 mb-2">{cert.category}</p>
-                  <h3 className="text-2xl font-bold mb-4">{cert.title}</h3>
+                  <h3 className="text-2xl font-bold mb-4 group-hover:text-[#0047ff] transition-colors">{cert.title}</h3>
                   <p className="text-gray-500 leading-relaxed mb-8 flex-1">{cert.desc}</p>
                   
                   <div className="flex items-center justify-between pt-6 border-t border-gray-100">
@@ -93,7 +109,7 @@ export function Certifications() {
                     </button>
                   </div>
                 </div>
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>
@@ -101,14 +117,20 @@ export function Certifications() {
 
       {/* 3. Assurance Footer */}
       <section className="py-16">
-        <div className="container mx-auto px-4 md:px-8 max-w-4xl text-center">
-           <div className="bg-white p-12 rounded-3xl border border-gray-200 shadow-sm flex flex-col items-center">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="container mx-auto px-4 md:px-8 max-w-4xl text-center"
+        >
+           <div className="bg-white p-12 rounded-3xl border border-gray-200 shadow-sm flex flex-col items-center hover:shadow-md transition-shadow">
              <ShieldCheck className="w-16 h-16 text-[#0047ff] mb-6" />
              <h3 className="text-2xl font-bold mb-4">Continuous Monitoring</h3>
              <p className="text-gray-500 mb-8 max-w-xl">Our dedicated compliance team conducts daily internal audits alongside annual independent assessments to ensure zero-tolerance adherence to all international labor and safety laws.</p>
-             <p className="font-mono text-sm font-bold">compliance@alaminexport.com</p>
+             <p className="font-mono text-sm font-bold text-black">compliance@alaminexport.com</p>
            </div>
-        </div>
+        </motion.div>
       </section>
 
     </div>
