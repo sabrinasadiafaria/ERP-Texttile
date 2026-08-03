@@ -43,9 +43,11 @@ export function Login() {
             />
           </div>
 
-          <Button type="submit" size="lg" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground py-6 text-base font-bold rounded-xl mt-4">
-            Sign In
-          </Button>
+          <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+            <Button type="submit" size="lg" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground py-6 text-base font-bold rounded-xl mt-4">
+              Sign In
+            </Button>
+          </motion.div>
         </form>
 
         <p className="text-sm text-center text-muted-foreground mt-8">
