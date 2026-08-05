@@ -6,73 +6,74 @@ import showroomBgImage from '@/assets/products-showroom-bg.jpg';
 import categoryMenswear from '@/assets/category-menswear.png';
 import categoryLadieswear from '@/assets/category-ladieswear.png';
 import categoryChristmas from '@/assets/category-christmas.png';
+import categoryAccessories from '@/assets/category-accessories.png';
 import fabricsImage from '@/assets/fabrics.png';
 import { Filter, ChevronDown, Check } from 'lucide-react';
 
 const PRODUCTS = [
   {
     id: 1,
-    title: "Premium Men's Sweaters & Cardigans",
+    title: "Menswear Sweaters & Cardigans",
     category: 'Menswear',
-    description: "High-quality men's knitwear featuring timeless designs, premium textures, and sophisticated colors for international brands.",
-    gauge: '12 Gauge',
-    yarn: 'Merino / Cashmere',
-    moq: '300 Pcs/Color',
+    description: "Premium men's sweaters & cardigans made with high quality woolen textures, smooth surface finish, and customizable fittings.",
+    gauge: '5, 7, 10, 12, 14 Gauge',
+    yarn: 'Combed / Organic Cotton / Merino / Cashmere',
+    moq: '300 Pcs/Color (3 Sizes)',
     image: categoryMenswear,
     customization: true
   },
   {
     id: 2,
-    title: "Elegant Women's Knit Fashion",
+    title: "Ladieswear (Sweater, Cardigan, Skirt, Kurti, Leggings)",
     category: 'Ladieswear',
-    description: "Sophisticated women's knitwear collections offering exceptional comfort, delicate structures, and trend-setting styles.",
-    gauge: '7 Gauge',
-    yarn: 'Organic Cotton',
-    moq: '300 Pcs/Color',
+    description: "Alluring design and soft texture ladies knitwear including sweaters, cardigans, skirts with fine borders, kurtis, and comfortable leggings.",
+    gauge: '5, 7, 10, 12, 14 Gauge',
+    yarn: '100% Organic Cotton / Italian Merino / Lambswool',
+    moq: '300 Pcs/Color (3 Sizes)',
     image: categoryLadieswear,
     customization: true
   },
   {
     id: 3,
-    title: 'Seasonal Festive Knitwear',
+    title: 'Christmas Jumpers & Accessories (Mens, Womens, Kids)',
     category: 'Christmas Jumpers',
-    description: 'Premium seasonal sweaters featuring intarsia and jacquard festive designs with high-quality yarn compositions.',
-    gauge: '10 Gauge',
-    yarn: 'Acrylic / Cotton',
-    moq: '300 Pcs/Color',
+    description: 'Festive festive knitwear collections with Intarsia and Jacquard patterns. Developed in 6-8 weeks from design to production.',
+    gauge: '7, 10, 12 Gauge',
+    yarn: '100% Organic Cotton / Recycled 60/40 Cotton-Poly',
+    moq: '300 Pcs/Color (3 Sizes)',
     image: categoryChristmas,
     customization: true
   },
   {
     id: 4,
-    title: 'Scarves, Beanies & Mittens',
+    title: 'Knitted Accessories (Beanie Cap, Scarf, Mittens, Wrist Warmer)',
     category: 'Accessories',
-    description: 'Coordinating knitted accessories designed with precision for warmth, durability, and retail appeal.',
-    gauge: '5 Gauge',
-    yarn: 'Lambswool',
-    moq: '300 Pcs/Color',
-    image: heroFgImage,
+    description: 'Beanie caps knitted with Shima Seiki technology, Mittens for severe cold warmth, and soft stretchable Wrist Warmers.',
+    gauge: '5, 7, 10, 12, 14 Gauge',
+    yarn: '100% Extra-fine Italian Merino / Lambswool',
+    moq: '300 Pcs/Color (3 Sizes)',
+    image: categoryAccessories,
     customization: true
   },
   {
     id: 5,
-    title: 'Knitted Blankets & Throws',
+    title: 'Homeware (Pillow Covers, Throws, Hot Water Bottle Covers)',
     category: 'Homeware',
-    description: 'Luxurious knitted homeware pieces designed for comfort and interior styling with premium organic fibers.',
-    gauge: '5 Gauge',
-    yarn: 'Combed Cotton',
-    moq: '300 Pcs/Color',
+    description: 'Distinctive appearance pillow covers, exquisite texture throws, and winter hot water bottle covers.',
+    gauge: '5, 7, 10, 12, 14 Gauge',
+    yarn: '100% Combed Cotton / Organic Cotton / Merino',
+    moq: '300 Pcs/Color (3 Sizes)',
     image: fabricsImage,
     customization: true
   },
   {
     id: 6,
-    title: 'Pet Knitwear Collection',
-    category: 'Accessories',
-    description: 'Durable, comfortable, and stylish knitted apparel specifically designed and fitted for pets.',
-    gauge: '12 Gauge',
-    yarn: 'Acrylic Blend',
-    moq: '300 Pcs/Color',
+    title: 'Dog Jumpers',
+    category: 'Dog Jumpers',
+    description: 'Lightweight, durable, soft (non-itchy), warm for winter pet jumpers in a wide range of shapes, sizes, and colors.',
+    gauge: '5, 7, 10, 12, 14 Gauge',
+    yarn: '100% Combed Cotton / Organic Cotton / Acrylic',
+    moq: '300 Pcs/Color (3 Sizes)',
     image: heroFgImage,
     customization: true
   }

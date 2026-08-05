@@ -5,32 +5,32 @@ import { ArrowRight, PenTool, Layers, Settings, Scissors, ShieldCheck, Globe } f
 const CAPABILITIES = [
   {
     title: 'Design & Sampling',
-    desc: 'In-house design team utilizing Shima Seiki Apex CAD to rapidly develop samples from sketches, tech packs, and fabric swatches.',
+    desc: 'In-house design team using Shima Seiki Apex CAD system. Sample development from sketches, tech packs, images, or swatches with ~7-day lead time.',
     icon: PenTool,
   },
   {
-    title: 'Premium Yarn Sourcing',
-    desc: 'High-quality natural and synthetic yarns including Organic Cotton, Merino Wool, Lambswool, Cashmere, Acrylic, and Viscose sourced from trusted suppliers.',
-    icon: Layers,
-  },
-  {
-    title: 'Advanced Flat-Bed Knitting',
-    desc: 'Japanese Shima Seiki fully-fashioned knitting machines producing high-quality sweaters across multiple gauges and knitting structures.',
+    title: 'Knitting Department',
+    desc: 'Japanese Shima Seiki flat-bed fully-fashioned machines (14 to 5 Gauge). Monthly knitting capacity ~170,000 pieces across fine and chunky gauges.',
     icon: Settings,
   },
   {
-    title: 'Linking & Garment Assembly',
-    desc: 'Highly skilled technicians precisely assemble knitted panels to deliver superior garment fit, durability, and craftsmanship.',
-    icon: Scissors,
+    title: 'Manufacturing & Structures',
+    desc: 'Specialized in Cable, Jacquard, and Intarsia knitting structures across fine 14/12/10 Gauge to 5 Gauge Chunky sweaters and cardigans.',
+    icon: Layers,
   },
   {
-    title: 'Finishing & Quality Assurance',
-    desc: 'Comprehensive inspection, washing, steam pressing, measurements, and quality verification before shipment.',
+    title: 'Finishing (9-Step QA)',
+    desc: 'Rigorous 9-step quality inspection: panel checks, fabric QA table, certified detergent washing, linking assembly, hand finishing, steam pressing & final exam.',
     icon: ShieldCheck,
   },
   {
-    title: 'Global Export & Compliance',
-    desc: 'Reliable manufacturing supported by international certifications, ethical production practices, and efficient export logistics serving buyers worldwide.',
+    title: 'Embroidery & Customization',
+    desc: 'Custom digitized swatches produced within 5–10 working days with Pantone color matching and placement options. Includes 2 free revisions.',
+    icon: Scissors,
+  },
+  {
+    title: 'Yarn Sourcing & Compliance',
+    desc: 'Sourcing 100% Combed Cotton, Organic Cotton, Italian Merino, Lambswool, Cashmere, Viscose, and Acrylic under Sedex & GOTS compliance.',
     icon: Globe,
   }
 ];
