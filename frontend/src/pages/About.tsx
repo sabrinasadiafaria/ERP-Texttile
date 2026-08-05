@@ -118,20 +118,20 @@ export function About() {
         >
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center divide-x divide-zinc-800/60">
             <div className="p-4">
-              <p className="text-4xl md:text-5xl font-extrabold text-[#4d79ff] font-mono mb-2">25+</p>
-              <p className="text-xs uppercase tracking-widest text-zinc-400 font-semibold">Years Experience</p>
+              <p className="text-4xl md:text-5xl font-extrabold text-[#4d79ff] font-mono mb-2">2002</p>
+              <p className="text-xs uppercase tracking-widest text-zinc-400 font-semibold">Established June 2002</p>
             </div>
             <div className="p-4">
-              <p className="text-4xl md:text-5xl font-extrabold text-[#4d79ff] font-mono mb-2">5,000+</p>
-              <p className="text-xs uppercase tracking-widest text-zinc-400 font-semibold">Skilled Artisans</p>
+              <p className="text-4xl md:text-5xl font-extrabold text-[#4d79ff] font-mono mb-2">170K</p>
+              <p className="text-xs uppercase tracking-widest text-zinc-400 font-semibold">Monthly Knitting Capacity</p>
             </div>
             <div className="p-4">
-              <p className="text-4xl md:text-5xl font-extrabold text-[#4d79ff] font-mono mb-2">20M+</p>
-              <p className="text-xs uppercase tracking-widest text-zinc-400 font-semibold">Annual Garment Volume</p>
+              <p className="text-4xl md:text-5xl font-extrabold text-[#4d79ff] font-mono mb-2">100%</p>
+              <p className="text-xs uppercase tracking-widest text-zinc-400 font-semibold">Export-Oriented Factory</p>
             </div>
             <div className="p-4">
-              <p className="text-4xl md:text-5xl font-extrabold text-[#4d79ff] font-mono mb-2">45+</p>
-              <p className="text-xs uppercase tracking-widest text-zinc-400 font-semibold">Export Countries</p>
+              <p className="text-4xl md:text-5xl font-extrabold text-[#4d79ff] font-mono mb-2">5 to 14G</p>
+              <p className="text-xs uppercase tracking-widest text-zinc-400 font-semibold">Shima Seiki Gauge Range</p>
             </div>
           </div>
         </motion.div>
