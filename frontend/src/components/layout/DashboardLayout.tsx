@@ -178,7 +178,7 @@ const ROLE_NAVIGATION: Record<string, { name: string; path: string; icon: any }[
 // ============================================================================
 
 export function DashboardLayout() {
-  const { profile, signOut } = useAuth();
+  const { profile, signOut, session, setDemoRole, demoRoles } = useAuth();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const location = useLocation();
 
@@ -198,15 +198,15 @@ export function DashboardLayout() {
     ));
   };
 
+  const roleSlug = profile?.role
+    ? profile.role.toLowerCase().replace(/&/g, '-').replace(/\s+/g, '-')
+    : '';
+
   const nav = profile?.role && ROLE_NAVIGATION[profile.role]
     ? ROLE_NAVIGATION[profile.role]
-    : [
-        {
-          name: 'Overview',
-          path: `/dashboard/${profile?.role?.toLowerCase().replace(/ & /g, '-').replace(/ /g, '-') || ''}`,
-          icon: LayoutDashboard,
-        },
-      ];
+    : profile?.role
+    ? [{ name: 'Overview', path: `/dashboard/${roleSlug}`, icon: LayoutDashboard }]
+    : [];
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
@@ -265,6 +265,25 @@ export function DashboardLayout() {
         </div>
 
         <div className="p-4 border-t border-white/10">
+          {!session && (
+            <div className="mb-3">
+              <label className="block text-[10px] uppercase tracking-wider text-gray-400 mb-1.5 px-2">
+                Demo Role
+              </label>
+              <select
+                value={profile?.role || ''}
+                onChange={(e) => {
+                  setDemoRole(e.target.value);
+                  window.location.href = '/dashboard';
+                }}
+                className="w-full bg-white/10 border border-white/10 text-white text-xs rounded-md px-2 py-1.5 focus:outline-none focus:border-[#0047ff]"
+              >
+                {demoRoles.map((r) => (
+                  <option key={r} value={r} className="text-black">{r}</option>
+                ))}
+              </select>
+            </div>
+          )}
           <div className="flex items-center mb-4 px-2">
             <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center mr-3">
               <UserIcon className="w-4 h-4 text-gray-300" />

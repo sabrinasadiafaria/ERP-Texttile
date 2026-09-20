@@ -3,7 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Loader2 } from 'lucide-react';
 
 export function ProtectedRoute() {
-  const { session, isLoading } = useAuth();
+  const { session, isLoading, profile } = useAuth();
   const location = useLocation();
 
   if (isLoading) {
@@ -14,8 +14,9 @@ export function ProtectedRoute() {
     );
   }
 
-  if (!session) {
-    // Redirect to login while saving the attempted URL
+  // Demo mode: no Supabase auth session, but profile may exist from local storage.
+  // Allow through so we can test role-based nav.
+  if (!session && !profile) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
