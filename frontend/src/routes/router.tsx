@@ -19,7 +19,13 @@ import { ProtectedRoute } from '@/components/layout/ProtectedRoute';
 import { RoleProtectedRoute } from '@/components/layout/RoleProtectedRoute';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { DashboardRedirect } from '@/pages/dashboards/DashboardRedirect';
-import { RoleDashboard } from '@/pages/dashboards/RoleDashboard';
+import { DirectorDashboard } from '@/pages/dashboards/DirectorDashboard';
+import { AdminDashboard } from '@/pages/dashboards/AdminDashboard';
+import { DepartmentDashboard } from '@/pages/dashboards/DepartmentDashboard';
+import { TransfersPage } from '@/pages/transfers/TransfersPage';
+import { YarnRequestPage } from '@/pages/yarn-request/YarnRequestPage';
+import { ActivityLogPage } from '@/pages/activity-log/ActivityLogPage';
+import { SettingsPage } from '@/pages/settings/SettingsPage';
 
 // Merchandiser Pages
 import { MerchandiserDashboard } from '@/pages/merchandiser/MerchandiserDashboard';
@@ -55,8 +61,6 @@ import { FinishedGoods } from '@/pages/inventory-manager/FinishedGoods';
 import { InventoryReports } from '@/pages/inventory-manager/InventoryReports';
 
 const ROLES = [
-  'Director',
-  'Admin',
   'Inventory & Store Manager',
   'Knitting PM',
   'Knitting APM',
@@ -67,6 +71,11 @@ const ROLES = [
   'Production PM',
   'Production APM'
 ];
+
+function roleToPath(role: string): string {
+  // Replace & first (with -), then spaces (with -)
+  return role.toLowerCase().replace(/&/g, '-').replace(/\s+/g, '-');
+}
 
 export const router = createBrowserRouter([
   {
@@ -94,6 +103,30 @@ export const router = createBrowserRouter([
         element: <DashboardLayout />,
         children: [
           { index: true, element: <DashboardRedirect /> },
+          {
+            path: 'director',
+            element: (
+              <RoleProtectedRoute allowedRoles={['Director']}>
+                <Outlet />
+              </RoleProtectedRoute>
+            ),
+            children: [
+              { index: true, element: <DirectorDashboard /> },
+            ],
+          },
+          {
+            path: 'admin',
+            element: (
+              <RoleProtectedRoute allowedRoles={['Admin']}>
+                <Outlet />
+              </RoleProtectedRoute>
+            ),
+            children: [
+              { index: true, element: <AdminDashboard /> },
+              { path: 'users', element: <AdminDashboard /> },
+              { path: 'departments', element: <AdminDashboard /> },
+            ],
+          },
           {
             path: 'merchandiser',
             element: (
@@ -155,16 +188,48 @@ export const router = createBrowserRouter([
             ],
           },
           ...ROLES.map((role) => {
-            const rolePath = role.toLowerCase().replace(/ & /g, '-').replace(/ /g, '-');
+            const rolePath = roleToPath(role);
             return {
               path: rolePath,
               element: (
                 <RoleProtectedRoute allowedRoles={[role]}>
-                  <RoleDashboard roleName={role} />
+                  <DepartmentDashboard />
                 </RoleProtectedRoute>
               ),
             };
           }),
+          {
+            path: 'transfers',
+            element: (
+              <RoleProtectedRoute allowedRoles={['Director', 'Admin', 'Merchandiser', 'Yarn Manager', 'Inventory & Store Manager', 'Knitting PM', 'Knitting APM', 'Linking PM', 'Linking APM', 'Cutting & Trimming PM', 'Cutting & Trimming APM', 'Production PM', 'Production APM']}>
+                <TransfersPage />
+              </RoleProtectedRoute>
+            ),
+          },
+          {
+            path: 'yarn-requests',
+            element: (
+              <RoleProtectedRoute allowedRoles={['Director', 'Admin', 'Merchandiser', 'Yarn Manager', 'Production PM', 'Production APM']}>
+                <YarnRequestPage />
+              </RoleProtectedRoute>
+            ),
+          },
+          {
+            path: 'activity-log',
+            element: (
+              <RoleProtectedRoute allowedRoles={['Director', 'Admin', 'Merchandiser', 'Yarn Manager', 'Inventory & Store Manager', 'Knitting PM', 'Knitting APM', 'Linking PM', 'Linking APM', 'Cutting & Trimming PM', 'Cutting & Trimming APM', 'Production PM', 'Production APM']}>
+                <ActivityLogPage />
+              </RoleProtectedRoute>
+            ),
+          },
+          {
+            path: 'settings',
+            element: (
+              <RoleProtectedRoute allowedRoles={['Director', 'Admin']}>
+                <SettingsPage />
+              </RoleProtectedRoute>
+            ),
+          },
         ],
       }
     ],

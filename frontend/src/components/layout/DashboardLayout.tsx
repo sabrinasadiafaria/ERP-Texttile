@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { 
-  LayoutDashboard, 
-  Settings, 
-  Bell, 
-  LogOut, 
-  Menu, 
-  X, 
+import {
+  LayoutDashboard,
+  Settings,
+  Bell,
+  LogOut,
+  Menu,
+  X,
   User as UserIcon,
   ChevronRight,
   Users,
@@ -25,10 +25,52 @@ import {
   ArrowLeftRight,
   FileOutput,
   AlertTriangle,
-  PackageCheck
+  PackageCheck,
+  UserCog,
+  Activity,
+  Scissors,
+  Shirt,
+  Building,
+  ArrowRightLeft,
+  Search,
 } from 'lucide-react';
 
+// ============================================================================
+// ROLE-BASED NAVIGATION MAP
+// ============================================================================
+// Every user sees navigation tailored to their role.
+// Departments appear in the production workflow order.
+
 const ROLE_NAVIGATION: Record<string, { name: string; path: string; icon: any }[]> = {
+
+  // ===========================================================================
+  // EXECUTIVE / MANAGEMENT ROLES
+  // ===========================================================================
+
+  'Director': [
+    { name: 'Factory Overview', path: '/dashboard/director', icon: LayoutDashboard },
+    { name: 'All Projects', path: '/dashboard/merchandiser/projects', icon: FolderKanban },
+    { name: 'Production', path: '/dashboard/production', icon: Factory },
+    { name: 'Transfers', path: '/dashboard/transfers', icon: ArrowRightLeft },
+    { name: 'Inventory', path: '/dashboard/inventory-manager', icon: Warehouse },
+    { name: 'Reports', path: '/dashboard/reports', icon: BarChart3 },
+    { name: 'Activity Log', path: '/dashboard/activity-log', icon: Activity },
+    { name: 'Users', path: '/dashboard/admin/users', icon: UserCog },
+    { name: 'Settings', path: '/dashboard/settings', icon: Settings },
+  ],
+
+  'Admin': [
+    { name: 'System Overview', path: '/dashboard/admin', icon: LayoutDashboard },
+    { name: 'Users', path: '/dashboard/admin/users', icon: UserCog },
+    { name: 'Departments', path: '/dashboard/admin/departments', icon: Building },
+    { name: 'System Logs', path: '/dashboard/activity-log', icon: Activity },
+    { name: 'Settings', path: '/dashboard/settings', icon: Settings },
+  ],
+
+  // ===========================================================================
+  // MERCHANDISER
+  // ===========================================================================
+
   'Merchandiser': [
     { name: 'Overview', path: '/dashboard/merchandiser', icon: LayoutDashboard },
     { name: 'Buyers', path: '/dashboard/merchandiser/buyers', icon: Users },
@@ -37,6 +79,11 @@ const ROLE_NAVIGATION: Record<string, { name: string; path: string; icon: any }[
     { name: 'Purchase Orders', path: '/dashboard/merchandiser/pos', icon: ShoppingCart },
     { name: 'Reports', path: '/dashboard/merchandiser/reports', icon: BarChart3 },
   ],
+
+  // ===========================================================================
+  // YARN MANAGER
+  // ===========================================================================
+
   'Yarn Manager': [
     { name: 'Overview', path: '/dashboard/yarn-manager', icon: LayoutDashboard },
     { name: 'Suppliers', path: '/dashboard/yarn-manager/suppliers', icon: Truck },
@@ -47,6 +94,11 @@ const ROLE_NAVIGATION: Record<string, { name: string; path: string; icon: any }[
     { name: 'Reservations', path: '/dashboard/yarn-manager/reservations', icon: Box },
     { name: 'KPO Generation', path: '/dashboard/yarn-manager/kpos', icon: Factory },
   ],
+
+  // ===========================================================================
+  // INVENTORY & STORE MANAGER
+  // ===========================================================================
+
   'Inventory & Store Manager': [
     { name: 'Overview', path: '/dashboard/inventory-manager', icon: LayoutDashboard },
     { name: 'Receiving', path: '/dashboard/inventory-manager/receiving', icon: PackageOpen },
@@ -58,7 +110,72 @@ const ROLE_NAVIGATION: Record<string, { name: string; path: string; icon: any }[
     { name: 'Finished Goods', path: '/dashboard/inventory-manager/finished-goods', icon: PackageCheck },
     { name: 'Reports', path: '/dashboard/inventory-manager/reports', icon: BarChart3 },
   ],
+
+  // ===========================================================================
+  // DEPARTMENT ROLES — PM (Production Manager) and APM (Asst Production Manager)
+  // ===========================================================================
+
+  'Knitting PM': [
+    { name: 'Knitting Dept', path: '/dashboard/knitting-pm', icon: LayoutDashboard },
+    { name: 'My Projects', path: '/dashboard/knitting-pm/projects', icon: FolderKanban },
+    { name: 'Yarn Requests', path: '/dashboard/yarn-manager/reservations', icon: FileOutput },
+    { name: 'Transfers In/Out', path: '/dashboard/transfers', icon: ArrowRightLeft },
+    { name: 'Reports', path: '/dashboard/reports', icon: BarChart3 },
+  ],
+
+  'Knitting APM': [
+    { name: 'Work Today', path: '/dashboard/knitting-apm', icon: LayoutDashboard },
+    { name: 'My Projects', path: '/dashboard/knitting-apm/projects', icon: FolderKanban },
+    { name: 'Update Production', path: '/dashboard/knitting-apm/update', icon: Shirt },
+    { name: 'Transfers', path: '/dashboard/transfers', icon: ArrowRightLeft },
+  ],
+
+  'Linking PM': [
+    { name: 'Linking Dept', path: '/dashboard/linking-pm', icon: LayoutDashboard },
+    { name: 'My Projects', path: '/dashboard/linking-pm/projects', icon: FolderKanban },
+    { name: 'Transfers In/Out', path: '/dashboard/transfers', icon: ArrowRightLeft },
+    { name: 'Reports', path: '/dashboard/reports', icon: BarChart3 },
+  ],
+
+  'Linking APM': [
+    { name: 'Work Today', path: '/dashboard/linking-apm', icon: LayoutDashboard },
+    { name: 'My Projects', path: '/dashboard/linking-apm/projects', icon: FolderKanban },
+    { name: 'Update Production', path: '/dashboard/linking-apm/update', icon: Shirt },
+    { name: 'Transfers', path: '/dashboard/transfers', icon: ArrowRightLeft },
+  ],
+
+  'Cutting & Trimming PM': [
+    { name: 'Trimming Dept', path: '/dashboard/cutting-&-trimming-pm', icon: LayoutDashboard },
+    { name: 'My Projects', path: '/dashboard/cutting-&-trimming-pm/projects', icon: FolderKanban },
+    { name: 'Transfers In/Out', path: '/dashboard/transfers', icon: ArrowRightLeft },
+    { name: 'Reports', path: '/dashboard/reports', icon: BarChart3 },
+  ],
+
+  'Cutting & Trimming APM': [
+    { name: 'Work Today', path: '/dashboard/cutting-&-trimming-apm', icon: LayoutDashboard },
+    { name: 'My Projects', path: '/dashboard/cutting-&-trimming-apm/projects', icon: FolderKanban },
+    { name: 'Update Production', path: '/dashboard/cutting-&-trimming-apm/update', icon: Scissors },
+    { name: 'Transfers', path: '/dashboard/transfers', icon: ArrowRightLeft },
+  ],
+
+  'Production PM': [
+    { name: 'Production Dept', path: '/dashboard/production-pm', icon: LayoutDashboard },
+    { name: 'My Projects', path: '/dashboard/production-pm/projects', icon: FolderKanban },
+    { name: 'Transfers In/Out', path: '/dashboard/transfers', icon: ArrowRightLeft },
+    { name: 'Reports', path: '/dashboard/reports', icon: BarChart3 },
+  ],
+
+  'Production APM': [
+    { name: 'Work Today', path: '/dashboard/production-apm', icon: LayoutDashboard },
+    { name: 'My Projects', path: '/dashboard/production-apm/projects', icon: FolderKanban },
+    { name: 'Update Production', path: '/dashboard/production-apm/update', icon: Shirt },
+    { name: 'Transfers', path: '/dashboard/transfers', icon: ArrowRightLeft },
+  ],
 };
+
+// ============================================================================
+// LAYOUT COMPONENT
+// ============================================================================
 
 export function DashboardLayout() {
   const { profile, signOut } = useAuth();
@@ -75,18 +192,28 @@ export function DashboardLayout() {
       <span key={p} className="flex items-center text-sm">
         {i > 0 && <ChevronRight className="w-4 h-4 mx-2 text-gray-400" />}
         <span className={i === path.length - 1 ? 'font-semibold text-black capitalize' : 'text-gray-500 capitalize'}>
-          {p.replace('-', ' ')}
+          {p.replace(/-&-/g, ' & ').replace(/-/g, ' ')}
         </span>
       </span>
     ));
   };
 
+  const nav = profile?.role && ROLE_NAVIGATION[profile.role]
+    ? ROLE_NAVIGATION[profile.role]
+    : [
+        {
+          name: 'Overview',
+          path: `/dashboard/${profile?.role?.toLowerCase().replace(/ & /g, '-').replace(/ /g, '-') || ''}`,
+          icon: LayoutDashboard,
+        },
+      ];
+
   return (
     <div className="min-h-screen bg-gray-50 flex">
-      
+
       {/* Mobile Sidebar Overlay */}
       {isSidebarOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/50 z-40 lg:hidden"
           onClick={() => setIsSidebarOpen(false)}
         />
@@ -100,7 +227,14 @@ export function DashboardLayout() {
         ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
       `}>
         <div className="h-16 flex items-center px-6 border-b border-white/10">
-          <span className="text-lg font-bold tracking-widest">AL-AMIN ERP</span>
+          <div>
+            <span className="text-sm font-bold tracking-widest text-white">AL-AMIN ERP</span>
+            {profile?.role && (
+              <span className="block text-[10px] text-gray-400 uppercase tracking-wider mt-0.5">
+                {profile.role}
+              </span>
+            )}
+          </div>
           <button className="ml-auto lg:hidden" onClick={() => setIsSidebarOpen(false)}>
             <X className="w-5 h-5 text-gray-400 hover:text-white" />
           </button>
@@ -108,17 +242,17 @@ export function DashboardLayout() {
 
         <div className="flex-1 overflow-y-auto py-4">
           <nav className="space-y-1 px-3">
-            {(profile?.role && ROLE_NAVIGATION[profile.role] ? ROLE_NAVIGATION[profile.role] : [
-              { name: 'Overview', path: `/dashboard/${profile?.role?.toLowerCase().replace(/ & /g, '-').replace(/ /g, '-') || ''}`, icon: LayoutDashboard }
-            ]).map((item) => {
-              const isActive = location.pathname === item.path || (item.path !== '/dashboard/merchandiser' && location.pathname.startsWith(item.path));
+            {nav.map((item) => {
+              const isActive = location.pathname === item.path ||
+                (item.path !== '/dashboard' && location.pathname.startsWith(item.path + '/')) ||
+                (item.path !== '/dashboard' && location.pathname === item.path);
               return (
-                <Link 
+                <Link
                   key={item.name}
                   to={item.path}
                   className={`flex items-center px-3 py-2.5 text-sm font-medium rounded-md transition-colors ${
-                    isActive 
-                      ? 'bg-[#0047ff] text-white' 
+                    isActive
+                      ? 'bg-[#0047ff] text-white'
                       : 'text-gray-300 hover:bg-white/10 hover:text-white'
                   }`}
                 >
@@ -140,7 +274,7 @@ export function DashboardLayout() {
               <p className="text-gray-400 text-xs truncate">{profile?.role}</p>
             </div>
           </div>
-          <button 
+          <button
             onClick={handleSignOut}
             className="flex items-center w-full px-3 py-2 text-sm font-medium text-gray-300 rounded-md hover:bg-white/10 transition-colors"
           >
@@ -152,11 +286,11 @@ export function DashboardLayout() {
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        
+
         {/* Top Navigation */}
         <header className="h-16 flex items-center justify-between px-4 sm:px-6 lg:px-8 bg-white border-b border-gray-200">
           <div className="flex items-center flex-1">
-            <button 
+            <button
               className="lg:hidden mr-4 text-gray-500 hover:text-black"
               onClick={() => setIsSidebarOpen(true)}
             >
@@ -167,14 +301,31 @@ export function DashboardLayout() {
             </div>
           </div>
 
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2 sm:space-x-4">
+            {/* Global Search */}
+            <div className="hidden md:block relative">
+              <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search projects, buyers..."
+                className="pl-9 pr-4 py-1.5 w-48 lg:w-64 rounded-lg border border-gray-200 focus:outline-none focus:border-[#0047ff] text-sm"
+              />
+            </div>
             <button className="p-2 text-gray-400 hover:text-black relative">
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border border-white" />
               <Bell className="w-5 h-5" />
             </button>
             <button className="p-2 text-gray-400 hover:text-black">
               <Settings className="w-5 h-5" />
             </button>
+            <div className="hidden sm:flex items-center space-x-2 pl-2 border-l border-gray-200 ml-2">
+              <div className="w-7 h-7 rounded-full bg-[#0047ff] flex items-center justify-center text-xs font-bold text-white">
+                {profile?.full_name?.split(' ').map(n => n[0]).join('').slice(0, 2) || 'U'}
+              </div>
+              <div className="text-xs">
+                <p className="font-medium text-gray-900 truncate">{profile?.full_name}</p>
+              </div>
+            </div>
           </div>
         </header>
 
@@ -184,7 +335,7 @@ export function DashboardLayout() {
             <Outlet />
           </div>
         </div>
-        
+
       </main>
     </div>
   );

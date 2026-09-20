@@ -11,7 +11,13 @@ app.use(express.json());
 
 const supabaseUrl = process.env.SUPABASE_URL || '';
 const supabaseKey = process.env.SUPABASE_ANON_KEY || '';
-export const supabase = createClient(supabaseUrl, supabaseKey);
+export const supabase = supabaseUrl && supabaseKey
+  ? createClient(supabaseUrl, supabaseKey)
+  : null;
+
+if (!supabase) {
+  console.warn('[backend] Supabase env not set — DB calls will fail. Set SUPABASE_URL and SUPABASE_ANON_KEY to enable.');
+}
 
 const PORT = process.env.PORT || 3000;
 
