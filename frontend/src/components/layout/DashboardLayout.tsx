@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import {
@@ -161,7 +161,25 @@ const ROLE_NAVIGATION: Record<string, { name: string; path: string; icon: any }[
 export function DashboardLayout() {
   const { profile, signOut, session, setDemoRole, demoRoles } = useAuth();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [hasUnread, setHasUnread] = useState(true);
+  const profileRef = useRef<HTMLDivElement>(null);
+  const notifRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
+        setIsProfileOpen(false);
+      }
+      if (notifRef.current && !notifRef.current.contains(event.target as Node)) {
+        setIsNotificationsOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleSignOut = async () => {
     await signOut();
@@ -311,20 +329,99 @@ export function DashboardLayout() {
                 className="pl-9 pr-4 py-1.5 w-48 lg:w-64 rounded-lg border border-gray-200 focus:outline-none focus:border-[#0047ff] text-sm"
               />
             </div>
-            <button className="p-2 text-gray-400 hover:text-black relative">
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border border-white" />
-              <Bell className="w-5 h-5" />
-            </button>
-            <button className="p-2 text-gray-400 hover:text-black">
+            {/* Notifications Dropdown */}
+            <div className="relative" ref={notifRef}>
+              <button 
+                onClick={() => {
+                  setIsNotificationsOpen(!isNotificationsOpen);
+                  if (hasUnread) setHasUnread(false);
+                  setIsProfileOpen(false);
+                }}
+                className="p-2 text-gray-400 hover:text-black relative transition-colors rounded-full hover:bg-gray-100"
+              >
+                {hasUnread && <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border border-white" />}
+                <Bell className="w-5 h-5" />
+              </button>
+
+              {isNotificationsOpen && (
+                <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-lg border border-gray-100 z-50 overflow-hidden transform origin-top-right transition-all">
+                  <div className="px-4 py-3 border-b border-gray-100 bg-gray-50/50">
+                    <h3 className="text-sm font-semibold text-gray-900">Notifications</h3>
+                  </div>
+                  <div className="max-h-80 overflow-y-auto">
+                    {[
+                      { title: 'New Transfer Request', time: '10m ago', unread: true },
+                      { title: 'Project 1004 is delayed', time: '1h ago', unread: true },
+                      { title: 'Low Yarn Stock: Superfine Merino', time: '3h ago', unread: false },
+                      { title: 'System maintenance scheduled', time: '1d ago', unread: false },
+                    ].map((n, i) => (
+                      <div key={i} className={`px-4 py-3 border-b border-gray-50 hover:bg-gray-50 cursor-pointer ${n.unread ? 'bg-blue-50/20' : ''}`}>
+                        <div className="flex justify-between items-start">
+                          <p className={`text-sm ${n.unread ? 'font-medium text-gray-900' : 'text-gray-700'}`}>{n.title}</p>
+                          {n.unread && <span className="w-2 h-2 bg-[#0047ff] rounded-full mt-1.5"></span>}
+                        </div>
+                        <p className="text-xs text-gray-500 mt-1">{n.time}</p>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="px-4 py-2 border-t border-gray-100 bg-gray-50/50 text-center">
+                    <button className="text-xs font-medium text-[#0047ff] hover:underline">
+                      Mark all as read
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Settings Link */}
+            <Link to="/dashboard/settings" className="p-2 text-gray-400 hover:text-black transition-colors rounded-full hover:bg-gray-100">
               <Settings className="w-5 h-5" />
-            </button>
-            <div className="hidden sm:flex items-center space-x-2 pl-2 border-l border-gray-200 ml-2">
-              <div className="w-7 h-7 rounded-full bg-[#0047ff] flex items-center justify-center text-xs font-bold text-white">
-                {profile?.full_name?.split(' ').map(n => n[0]).join('').slice(0, 2) || 'U'}
+            </Link>
+
+            {/* Profile Dropdown */}
+            <div className="relative" ref={profileRef}>
+              <div 
+                className="hidden sm:flex items-center space-x-2 pl-2 border-l border-gray-200 ml-2 cursor-pointer hover:bg-gray-50 rounded-lg p-1 transition-colors"
+                onClick={() => {
+                  setIsProfileOpen(!isProfileOpen);
+                  setIsNotificationsOpen(false);
+                }}
+              >
+                <div className="w-7 h-7 rounded-full bg-[#0047ff] flex items-center justify-center text-xs font-bold text-white shadow-sm">
+                  {profile?.full_name?.split(' ').map(n => n[0]).join('').slice(0, 2) || 'U'}
+                </div>
+                <div className="text-xs">
+                  <p className="font-medium text-gray-900 truncate">{profile?.full_name}</p>
+                </div>
               </div>
-              <div className="text-xs">
-                <p className="font-medium text-gray-900 truncate">{profile?.full_name}</p>
-              </div>
+
+              {isProfileOpen && (
+                <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-100 z-50 overflow-hidden transform origin-top-right transition-all">
+                  <div className="px-4 py-3 border-b border-gray-100 bg-gray-50/50">
+                    <p className="text-sm font-semibold text-gray-900 truncate">{profile?.full_name}</p>
+                    <p className="text-xs text-gray-500 truncate mt-0.5">{profile?.role}</p>
+                  </div>
+                  <div className="py-1">
+                    <Link to="/dashboard/settings" className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-[#0047ff]">
+                      <UserIcon className="w-4 h-4 mr-2" />
+                      My Profile
+                    </Link>
+                    <Link to="/dashboard/settings" className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-[#0047ff]">
+                      <Settings className="w-4 h-4 mr-2" />
+                      Preferences
+                    </Link>
+                  </div>
+                  <div className="border-t border-gray-100 py-1">
+                    <button 
+                      onClick={handleSignOut}
+                      className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                    >
+                      <LogOut className="w-4 h-4 mr-2" />
+                      Sign Out
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </header>
