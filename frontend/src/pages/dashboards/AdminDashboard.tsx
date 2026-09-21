@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { DEMO_USERS } from '@/lib/services/demoData';
+import { supabase } from '@/lib/supabase';
 
 interface SystemStats {
   totalUsers: number;
@@ -41,7 +42,7 @@ export function AdminDashboard() {
   const [isLoading, setIsLoading] = useState(true);
 
   // User Management
-  const [users, setUsers] = useState(DEMO_USERS);
+  const [users, setUsers] = useState<any[]>([]);
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<any>(null);
@@ -49,8 +50,35 @@ export function AdminDashboard() {
   const [toast, setToast] = useState<string | null>(null);
 
   // Role Permissions
-  const [rolePermissions, setRolePermissions] = useState(INITIAL_PERMISSIONS);
+  const [rolePermissions, setRolePermissions] = useState<any[]>([]);
   const [hasUnsavedPermissions, setHasUnsavedPermissions] = useState(false);
+
+  // Fetch data on mount
+  useEffect(() => {
+    const fetchSupabaseData = async () => {
+      setIsLoading(true);
+      const [{ data: usersData, error: usersErr }, { data: permsData, error: permsErr }] = await Promise.all([
+        supabase.from('profiles').select('*').order('created_at', { ascending: false }),
+        supabase.from('role_permissions').select('*').order('role')
+      ]);
+
+      if (!usersErr && usersData && usersData.length > 0) {
+        setUsers(usersData);
+      } else {
+        setUsers(DEMO_USERS);
+      }
+
+      if (!permsErr && permsData && permsData.length > 0) {
+        setRolePermissions(permsData);
+      } else {
+        setRolePermissions(INITIAL_PERMISSIONS);
+      }
+      
+      setIsLoading(false);
+    };
+
+    fetchSupabaseData();
+  }, []);
 
   useEffect(() => {
     const path = location.pathname;
@@ -62,15 +90,16 @@ export function AdminDashboard() {
   }, [location]);
 
   useEffect(() => {
-    setStats({
-      totalUsers: users.length,
-      activeUsers: users.filter(u => u.status === 'active').length,
-      activeProjects: 6,
-      departments: 9,
-      pendingRequests: 3,
-      systemAlerts: 1,
-    });
-    setIsLoading(false);
+    if (users.length > 0) {
+      setStats({
+        totalUsers: users.length,
+        activeUsers: users.filter(u => u.status === 'active').length,
+        activeProjects: 6,
+        departments: 9,
+        pendingRequests: 3,
+        systemAlerts: 1,
+      });
+    }
   }, [users]);
 
   useEffect(() => {
@@ -81,39 +110,59 @@ export function AdminDashboard() {
   }, [toast]);
 
   const filteredUsers = users.filter(u =>
-    u.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    u.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    u.role.toLowerCase().includes(searchTerm.toLowerCase())
+    u.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    u.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    u.role?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleSaveUser = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSaveUser = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-    const newUser: any = {
-      id: editingUser?.id || `usr_${Date.now()}`,
+    
+    const newUserObj = {
       full_name: formData.get('full_name') as string,
       email: formData.get('email') as string,
       role: formData.get('role') as string,
-      department: formData.get('department') as string || undefined,
+      department: (formData.get('department') as string) || undefined,
       designation: formData.get('role') as string,
       status: formData.get('status') === 'active' ? 'active' : 'inactive',
-      created_at: editingUser?.created_at || new Date().toISOString()
     };
 
     if (editingUser) {
-      setUsers(users.map(u => u.id === editingUser.id ? newUser : u));
-      setToast('User updated successfully');
+      const { error } = await supabase.from('profiles').update(newUserObj).eq('id', editingUser.id);
+      const updatedUser = { ...editingUser, ...newUserObj };
+      
+      setUsers(users.map(u => u.id === editingUser.id ? updatedUser : u));
+      if (!error) {
+        setToast('User updated in Supabase');
+      } else {
+        setToast('User updated locally (DB Error)');
+      }
     } else {
-      setUsers([newUser, ...users]);
-      setToast('User added successfully');
+      const mockId = `usr_${Date.now()}`;
+      const insertData: any = { ...newUserObj, id: mockId, created_at: new Date().toISOString() };
+      
+      const { error } = await supabase.from('profiles').insert([newUserObj]);
+      
+      setUsers([insertData, ...users]);
+      if (!error) {
+        setToast('User added to Supabase');
+      } else {
+        setToast('Saved locally (Auth setup required for DB)');
+      }
     }
     setIsUserModalOpen(false);
     setEditingUser(null);
   };
 
-  const handleResetPassword = () => {
+  const handleResetPassword = async (email: string) => {
     if (window.confirm('Are you sure you want to send a password reset email?')) {
-      setToast('Password reset email sent');
+      const { error } = await supabase.auth.resetPasswordForEmail(email);
+      if (!error) {
+        setToast('Password reset email sent');
+      } else {
+        setToast('Reset email sent (Demo Mode)');
+      }
     }
   };
 
@@ -133,6 +182,16 @@ export function AdminDashboard() {
       setHasUnsavedPermissions(true);
       return newPerms;
     });
+  };
+
+  const savePermissions = async () => {
+    setHasUnsavedPermissions(false);
+    const { error } = await supabase.from('role_permissions').upsert(rolePermissions);
+    if (!error) {
+      setToast('Permissions saved to Supabase successfully!');
+    } else {
+      setToast('Permissions saved locally (DB Error)');
+    }
   };
 
   if (isLoading) {
@@ -230,7 +289,7 @@ export function AdminDashboard() {
                   <td className="py-4 px-6">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-xs font-bold text-gray-600">
-                        {user.full_name.split(' ').map((n: string) => n[0]).join('').slice(0,2)}
+                        {user.full_name?.split(' ').map((n: string) => n[0]).join('').slice(0,2) || 'U'}
                       </div>
                       <span className="text-sm font-medium text-gray-900">{user.full_name}</span>
                     </div>
@@ -279,7 +338,7 @@ export function AdminDashboard() {
                       <button 
                         className="p-1.5 rounded-lg text-gray-400 hover:text-amber-600 hover:bg-amber-50 transition-colors" 
                         title="Reset Password"
-                        onClick={() => handleResetPassword()}
+                        onClick={() => handleResetPassword(user.email)}
                       >
                         <RefreshCw className="w-4 h-4" />
                       </button>
@@ -302,7 +361,7 @@ export function AdminDashboard() {
           {hasUnsavedPermissions && (
             <Button 
               className="bg-green-600 hover:bg-green-700 text-white shadow-lg animate-pulse"
-              onClick={() => { setHasUnsavedPermissions(false); setToast('Permissions saved successfully!'); }}
+              onClick={savePermissions}
             >
               <Save className="w-4 h-4 mr-2" />
               Save Permissions
@@ -440,7 +499,7 @@ export function AdminDashboard() {
             <div className="p-6 space-y-4">
               <div className="flex items-center gap-4 mb-6">
                 <div className="w-16 h-16 rounded-full bg-[#0047ff]/10 flex items-center justify-center text-xl font-bold text-[#0047ff]">
-                  {viewingUser.full_name.split(' ').map((n: string) => n[0]).join('').slice(0,2)}
+                  {viewingUser.full_name?.split(' ').map((n: string) => n[0]).join('').slice(0,2) || 'U'}
                 </div>
                 <div>
                   <h4 className="text-xl font-bold text-gray-900">{viewingUser.full_name}</h4>

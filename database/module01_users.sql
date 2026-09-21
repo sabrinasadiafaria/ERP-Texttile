@@ -1,0 +1,79 @@
+-- Module 01: Users and Permissions
+
+-- Profiles table (extends auth.users)
+CREATE TABLE IF NOT EXISTS profiles (
+  id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  email TEXT NOT NULL,
+  full_name TEXT,
+  role TEXT,
+  department TEXT,
+  designation TEXT,
+  status TEXT DEFAULT 'active',
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Role Permissions table
+CREATE TABLE IF NOT EXISTS role_permissions (
+  role TEXT PRIMARY KEY,
+  dashboard BOOLEAN DEFAULT true,
+  projects TEXT DEFAULT 'view',
+  yarn TEXT DEFAULT 'view',
+  inventory TEXT DEFAULT 'view',
+  production TEXT DEFAULT 'view',
+  reports TEXT DEFAULT 'view',
+  admin TEXT DEFAULT 'none',
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Enable RLS
+ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE role_permissions ENABLE ROW LEVEL SECURITY;
+
+-- Profiles Policies
+-- Admins can read all profiles
+CREATE POLICY "Admins can view all profiles"
+  ON profiles FOR SELECT
+  USING (
+    auth.uid() IN (
+      SELECT id FROM profiles WHERE role = 'Admin'
+    )
+    OR auth.uid() = id
+  );
+
+-- Admins can insert/update profiles
+CREATE POLICY "Admins can manage profiles"
+  ON profiles FOR ALL
+  USING (
+    auth.uid() IN (
+      SELECT id FROM profiles WHERE role = 'Admin'
+    )
+  );
+
+-- Role Permissions Policies
+-- Anyone can read permissions
+CREATE POLICY "Anyone can view role permissions"
+  ON role_permissions FOR SELECT
+  USING (auth.role() = 'authenticated');
+
+-- Only Admins can modify permissions
+CREATE POLICY "Admins can manage role permissions"
+  ON role_permissions FOR ALL
+  USING (
+    auth.uid() IN (
+      SELECT id FROM profiles WHERE role = 'Admin'
+    )
+  );
+
+-- Insert initial roles
+INSERT INTO role_permissions (role, dashboard, projects, yarn, inventory, production, reports, admin)
+VALUES 
+  ('Director', true, 'view', 'view', 'view', 'view', 'view', 'none'),
+  ('Admin', true, 'view', 'view', 'view', 'view', 'view', 'full'),
+  ('Merchandiser', true, 'full', 'view', 'view', 'none', 'view', 'none'),
+  ('Yarn Manager', true, 'view', 'full', 'view', 'none', 'view', 'none'),
+  ('Inventory Manager', true, 'view', 'view', 'full', 'none', 'view', 'none'),
+  ('Production PM', true, 'view', 'none', 'none', 'manage', 'view', 'none'),
+  ('Production APM', true, 'view', 'none', 'none', 'update', 'none', 'none')
+ON CONFLICT (role) DO NOTHING;
