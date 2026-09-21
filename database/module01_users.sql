@@ -31,40 +31,26 @@ CREATE TABLE IF NOT EXISTS role_permissions (
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE role_permissions ENABLE ROW LEVEL SECURITY;
 
--- Profiles Policies
--- Admins can read all profiles
-CREATE POLICY "Admins can view all profiles"
-  ON profiles FOR SELECT
-  USING (
-    auth.uid() IN (
-      SELECT id FROM profiles WHERE role = 'Admin'
-    )
-    OR auth.uid() = id
-  );
-
--- Admins can insert/update profiles
-CREATE POLICY "Admins can manage profiles"
-  ON profiles FOR ALL
-  USING (
-    auth.uid() IN (
-      SELECT id FROM profiles WHERE role = 'Admin'
-    )
-  );
-
--- Role Permissions Policies
--- Anyone can read permissions
+-- Disable RLS for prototype or allow anon so demo mode can edit/view
+DROP POLICY IF EXISTS "Anyone can view role permissions" ON role_permissions;
 CREATE POLICY "Anyone can view role permissions"
   ON role_permissions FOR SELECT
-  USING (auth.role() = 'authenticated');
+  USING (true);
 
--- Only Admins can modify permissions
+DROP POLICY IF EXISTS "Admins can manage role permissions" ON role_permissions;
 CREATE POLICY "Admins can manage role permissions"
   ON role_permissions FOR ALL
-  USING (
-    auth.uid() IN (
-      SELECT id FROM profiles WHERE role = 'Admin'
-    )
-  );
+  USING (true);
+
+DROP POLICY IF EXISTS "Admins can view all profiles" ON profiles;
+CREATE POLICY "Admins can view all profiles"
+  ON profiles FOR SELECT
+  USING (true);
+
+DROP POLICY IF EXISTS "Admins can manage profiles" ON profiles;
+CREATE POLICY "Admins can manage profiles"
+  ON profiles FOR ALL
+  USING (true);
 
 -- Insert initial roles
 INSERT INTO role_permissions (role, dashboard, projects, yarn, inventory, production, reports, admin)
