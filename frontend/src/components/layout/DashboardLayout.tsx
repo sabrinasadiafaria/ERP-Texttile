@@ -28,8 +28,6 @@ import {
   PackageCheck,
   UserCog,
   Activity,
-  Scissors,
-  Shirt,
   Building,
   ArrowRightLeft,
   Search,
@@ -50,10 +48,8 @@ const ROLE_NAVIGATION: Record<string, { name: string; path: string; icon: any }[
   'Director': [
     { name: 'Factory Overview', path: '/dashboard/director', icon: LayoutDashboard },
     { name: 'All Projects', path: '/dashboard/merchandiser/projects', icon: FolderKanban },
-    { name: 'Production', path: '/dashboard/production', icon: Factory },
     { name: 'Transfers', path: '/dashboard/transfers', icon: ArrowRightLeft },
     { name: 'Inventory', path: '/dashboard/inventory-manager', icon: Warehouse },
-    { name: 'Reports', path: '/dashboard/reports', icon: BarChart3 },
     { name: 'Activity Log', path: '/dashboard/activity-log', icon: Activity },
     { name: 'Users', path: '/dashboard/admin/users', icon: UserCog },
     { name: 'Settings', path: '/dashboard/settings', icon: Settings },
@@ -117,58 +113,43 @@ const ROLE_NAVIGATION: Record<string, { name: string; path: string; icon: any }[
 
   'Knitting PM': [
     { name: 'Knitting Dept', path: '/dashboard/knitting-pm', icon: LayoutDashboard },
-    { name: 'My Projects', path: '/dashboard/knitting-pm/projects', icon: FolderKanban },
-    { name: 'Yarn Requests', path: '/dashboard/yarn-manager/reservations', icon: FileOutput },
+    { name: 'Yarn Requests', path: '/dashboard/yarn-requests', icon: FileOutput },
     { name: 'Transfers In/Out', path: '/dashboard/transfers', icon: ArrowRightLeft },
-    { name: 'Reports', path: '/dashboard/reports', icon: BarChart3 },
   ],
 
   'Knitting APM': [
     { name: 'Work Today', path: '/dashboard/knitting-apm', icon: LayoutDashboard },
-    { name: 'My Projects', path: '/dashboard/knitting-apm/projects', icon: FolderKanban },
-    { name: 'Update Production', path: '/dashboard/knitting-apm/update', icon: Shirt },
+    { name: 'Yarn Requests', path: '/dashboard/yarn-requests', icon: FileOutput },
     { name: 'Transfers', path: '/dashboard/transfers', icon: ArrowRightLeft },
   ],
 
   'Linking PM': [
     { name: 'Linking Dept', path: '/dashboard/linking-pm', icon: LayoutDashboard },
-    { name: 'My Projects', path: '/dashboard/linking-pm/projects', icon: FolderKanban },
     { name: 'Transfers In/Out', path: '/dashboard/transfers', icon: ArrowRightLeft },
-    { name: 'Reports', path: '/dashboard/reports', icon: BarChart3 },
   ],
 
   'Linking APM': [
     { name: 'Work Today', path: '/dashboard/linking-apm', icon: LayoutDashboard },
-    { name: 'My Projects', path: '/dashboard/linking-apm/projects', icon: FolderKanban },
-    { name: 'Update Production', path: '/dashboard/linking-apm/update', icon: Shirt },
     { name: 'Transfers', path: '/dashboard/transfers', icon: ArrowRightLeft },
   ],
 
   'Cutting & Trimming PM': [
     { name: 'Trimming Dept', path: '/dashboard/cutting-&-trimming-pm', icon: LayoutDashboard },
-    { name: 'My Projects', path: '/dashboard/cutting-&-trimming-pm/projects', icon: FolderKanban },
     { name: 'Transfers In/Out', path: '/dashboard/transfers', icon: ArrowRightLeft },
-    { name: 'Reports', path: '/dashboard/reports', icon: BarChart3 },
   ],
 
   'Cutting & Trimming APM': [
     { name: 'Work Today', path: '/dashboard/cutting-&-trimming-apm', icon: LayoutDashboard },
-    { name: 'My Projects', path: '/dashboard/cutting-&-trimming-apm/projects', icon: FolderKanban },
-    { name: 'Update Production', path: '/dashboard/cutting-&-trimming-apm/update', icon: Scissors },
     { name: 'Transfers', path: '/dashboard/transfers', icon: ArrowRightLeft },
   ],
 
   'Production PM': [
     { name: 'Production Dept', path: '/dashboard/production-pm', icon: LayoutDashboard },
-    { name: 'My Projects', path: '/dashboard/production-pm/projects', icon: FolderKanban },
     { name: 'Transfers In/Out', path: '/dashboard/transfers', icon: ArrowRightLeft },
-    { name: 'Reports', path: '/dashboard/reports', icon: BarChart3 },
   ],
 
   'Production APM': [
     { name: 'Work Today', path: '/dashboard/production-apm', icon: LayoutDashboard },
-    { name: 'My Projects', path: '/dashboard/production-apm/projects', icon: FolderKanban },
-    { name: 'Update Production', path: '/dashboard/production-apm/update', icon: Shirt },
     { name: 'Transfers', path: '/dashboard/transfers', icon: ArrowRightLeft },
   ],
 };

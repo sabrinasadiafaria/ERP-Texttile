@@ -130,7 +130,7 @@ export const router = createBrowserRouter([
           {
             path: 'merchandiser',
             element: (
-              <RoleProtectedRoute allowedRoles={['Merchandiser']}>
+              <RoleProtectedRoute allowedRoles={['Director', 'Admin', 'Merchandiser']}>
                 <Outlet />
               </RoleProtectedRoute>
             ),
@@ -150,7 +150,7 @@ export const router = createBrowserRouter([
           {
             path: 'yarn-manager',
             element: (
-              <RoleProtectedRoute allowedRoles={['Yarn Manager']}>
+              <RoleProtectedRoute allowedRoles={['Director', 'Admin', 'Yarn Manager']}>
                 <Outlet />
               </RoleProtectedRoute>
             ),
@@ -171,7 +171,7 @@ export const router = createBrowserRouter([
           {
             path: 'inventory-manager',
             element: (
-              <RoleProtectedRoute allowedRoles={['Inventory & Store Manager']}>
+              <RoleProtectedRoute allowedRoles={['Director', 'Admin', 'Inventory & Store Manager']}>
                 <Outlet />
               </RoleProtectedRoute>
             ),
@@ -198,6 +198,15 @@ export const router = createBrowserRouter([
               ),
             };
           }),
+          {
+            path: 'projects/:id',
+            element: (
+              <RoleProtectedRoute allowedRoles={['Director', 'Admin', 'Merchandiser', 'Knitting PM', 'Knitting APM', 'Linking PM', 'Linking APM', 'Cutting & Trimming PM', 'Cutting & Trimming APM', 'Production PM', 'Production APM']}>
+                <ProjectDetails />
+              </RoleProtectedRoute>
+            ),
+          },
+
           {
             path: 'transfers',
             element: (

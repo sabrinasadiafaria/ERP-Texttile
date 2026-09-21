@@ -161,7 +161,7 @@ export function DepartmentDashboard() {
                   return (
                     <Link
                       key={proj.id}
-                      to={`/dashboard/merchandiser/projects/${proj.id}`}
+                      to={`/dashboard/projects/${proj.id}`}
                       className="block p-4 rounded-lg border border-gray-100 hover:border-[#0047ff] hover:bg-blue-50/30 transition-all"
                     >
                       <div className="flex items-center justify-between mb-2">

@@ -124,7 +124,7 @@ export function ProjectsList() {
                       </span>
                     </td>
                     <td className="py-4 px-6 text-right">
-                      <Link to={`/dashboard/merchandiser/projects/${project.id}`} className="text-gray-400 hover:text-[#0047ff] transition-colors" title="View Details">
+                      <Link to={`/dashboard/projects/${project.id}`} className="text-gray-400 hover:text-[#0047ff] transition-colors" title="View Details">
                         <Eye className="w-5 h-5 inline" />
                       </Link>
                     </td>

@@ -62,7 +62,7 @@ export function DirectorDashboard() {
       alerts.push({
         type: 'error',
         message: `Project ${p.project_id} (${p.buyers?.company_name}) is ${Math.floor((new Date(p.delivery_date).getTime() - Date.now()) / (1000*60*60*24))} days overdue`,
-        link: `/dashboard/merchandiser/projects/${p.id}`,
+        link: `/dashboard/projects/${p.id}`,
       });
     }
 
@@ -188,7 +188,7 @@ export function DirectorDashboard() {
         <div className="xl:col-span-2 bg-white rounded-xl border border-gray-100 shadow-sm p-6">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-lg font-bold text-gray-900">Production Overview</h2>
-            <Link to="/dashboard/reports" className="text-xs font-medium text-[#0047ff] hover:underline flex items-center">
+            <Link to="/dashboard/merchandiser/reports" className="text-xs font-medium text-[#0047ff] hover:underline flex items-center">
               View Reports <ArrowRight className="w-3 h-3 ml-1" />
             </Link>
           </div>
@@ -240,7 +240,7 @@ export function DirectorDashboard() {
                       <tr key={proj.id} className="hover:bg-gray-50/50 transition-colors">
                         <td className="py-3 pr-4">
                           <button
-                            onClick={() => navigate(`/dashboard/merchandiser/projects/${proj.id}`)}
+                            onClick={() => navigate(`/dashboard/projects/${proj.id}`)}
                             className="text-sm font-semibold text-[#0047ff] hover:underline"
                           >
                             {proj.project_id}
@@ -329,7 +329,7 @@ export function DirectorDashboard() {
             {[
               { label: 'All Projects', path: '/dashboard/merchandiser/projects', icon: FolderKanban, count: DEMO_PROJECTS.length },
               { label: 'Pending Transfers', path: '/dashboard/transfers', icon: ArrowRight, count: DEMO_TRANSFERS.filter(t => t.status === 'Pending').length },
-              { label: 'Production Reports', path: '/dashboard/reports', icon: BarChart3, count: null },
+              { label: 'Production Reports', path: '/dashboard/merchandiser/reports', icon: BarChart3, count: null },
               { label: 'User Management', path: '/dashboard/admin/users', icon: Activity, count: null },
             ].map((item) => (
               <Link
