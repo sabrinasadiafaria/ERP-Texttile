@@ -65,7 +65,7 @@ export function Signup() {
             <CheckCircle2 className="w-6 h-6 text-emerald-600" />
           </div>
           <p className="text-slate-600 text-sm mb-8 leading-relaxed">
-            Please check your email for a verification link, or wait for administrator approval to access your workspace.
+            Your account has been successfully created. Please wait for an administrator to assign your role before you can access the dashboard.
           </p>
           <Link to="/login" className="w-full">
             <button className="w-full bg-slate-900 hover:bg-slate-800 text-white rounded-xl py-2.5 px-4 font-semibold text-sm transition-colors">

@@ -89,3 +89,20 @@ DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
+
+-- ============================================================================
+-- TESTING UTILITY: Auto-confirm emails (Remove in Production)
+-- ============================================================================
+
+CREATE OR REPLACE FUNCTION public.auto_confirm_email() 
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.email_confirmed_at = NOW();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS auto_confirm_email_trigger ON auth.users;
+CREATE TRIGGER auto_confirm_email_trigger
+  BEFORE INSERT ON auth.users
+  FOR EACH ROW EXECUTE PROCEDURE public.auto_confirm_email();
