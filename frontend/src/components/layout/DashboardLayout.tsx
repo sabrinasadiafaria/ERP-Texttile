@@ -33,133 +33,14 @@ import {
   Search,
 } from 'lucide-react';
 
-// ============================================================================
-// ROLE-BASED NAVIGATION MAP
-// ============================================================================
-// Every user sees navigation tailored to their role.
-// Departments appear in the production workflow order.
-
-const ROLE_NAVIGATION: Record<string, { name: string; path: string; icon: any }[]> = {
-
-  // ===========================================================================
-  // EXECUTIVE / MANAGEMENT ROLES
-  // ===========================================================================
-
-  'Director': [
-    { name: 'Factory Overview', path: '/dashboard/director', icon: LayoutDashboard },
-    { name: 'All Projects', path: '/dashboard/merchandiser/projects', icon: FolderKanban },
-    { name: 'Transfers', path: '/dashboard/transfers', icon: ArrowRightLeft },
-    { name: 'Inventory', path: '/dashboard/inventory-manager', icon: Warehouse },
-    { name: 'Activity Log', path: '/dashboard/activity-log', icon: Activity },
-    { name: 'Users', path: '/dashboard/admin/users', icon: UserCog },
-    { name: 'Settings', path: '/dashboard/settings', icon: Settings },
-  ],
-
-  'Admin': [
-    { name: 'System Overview', path: '/dashboard/admin', icon: LayoutDashboard },
-    { name: 'Users', path: '/dashboard/admin/users', icon: UserCog },
-    { name: 'Departments', path: '/dashboard/admin/departments', icon: Building },
-    { name: 'System Logs', path: '/dashboard/activity-log', icon: Activity },
-    { name: 'Settings', path: '/dashboard/settings', icon: Settings },
-  ],
-
-  // ===========================================================================
-  // MERCHANDISER
-  // ===========================================================================
-
-  'Merchandiser': [
-    { name: 'Overview', path: '/dashboard/merchandiser', icon: LayoutDashboard },
-    { name: 'Buyers', path: '/dashboard/merchandiser/buyers', icon: Users },
-    { name: 'Projects', path: '/dashboard/merchandiser/projects', icon: FolderKanban },
-    { name: 'BOMs', path: '/dashboard/merchandiser/boms', icon: FileText },
-    { name: 'Purchase Orders', path: '/dashboard/merchandiser/pos', icon: ShoppingCart },
-    { name: 'Reports', path: '/dashboard/merchandiser/reports', icon: BarChart3 },
-  ],
-
-  // ===========================================================================
-  // YARN MANAGER
-  // ===========================================================================
-
-  'Yarn Manager': [
-    { name: 'Overview', path: '/dashboard/yarn-manager', icon: LayoutDashboard },
-    { name: 'Suppliers', path: '/dashboard/yarn-manager/suppliers', icon: Truck },
-    { name: 'PO Queue', path: '/dashboard/yarn-manager/purchase-orders', icon: ShoppingCart },
-    { name: 'Yarn Master', path: '/dashboard/yarn-manager/yarn-master', icon: FileText },
-    { name: 'Receipts & QA', path: '/dashboard/yarn-manager/receipts', icon: ClipboardCheck },
-    { name: 'Inventory', path: '/dashboard/yarn-manager/inventory', icon: Warehouse },
-    { name: 'Reservations', path: '/dashboard/yarn-manager/reservations', icon: Box },
-    { name: 'KPO Generation', path: '/dashboard/yarn-manager/kpos', icon: Factory },
-  ],
-
-  // ===========================================================================
-  // INVENTORY & STORE MANAGER
-  // ===========================================================================
-
-  'Inventory & Store Manager': [
-    { name: 'Overview', path: '/dashboard/inventory-manager', icon: LayoutDashboard },
-    { name: 'Receiving', path: '/dashboard/inventory-manager/receiving', icon: PackageOpen },
-    { name: 'Verification', path: '/dashboard/inventory-manager/verification', icon: CheckSquare },
-    { name: 'Warehouse', path: '/dashboard/inventory-manager/warehouse', icon: Warehouse },
-    { name: 'Material Requests', path: '/dashboard/inventory-manager/requests', icon: FileOutput },
-    { name: 'Material Issues', path: '/dashboard/inventory-manager/issues', icon: ArrowLeftRight },
-    { name: 'Returns & Adj.', path: '/dashboard/inventory-manager/exceptions', icon: AlertTriangle },
-    { name: 'Finished Goods', path: '/dashboard/inventory-manager/finished-goods', icon: PackageCheck },
-    { name: 'Reports', path: '/dashboard/inventory-manager/reports', icon: BarChart3 },
-  ],
-
-  // ===========================================================================
-  // DEPARTMENT ROLES — PM (Production Manager) and APM (Asst Production Manager)
-  // ===========================================================================
-
-  'Knitting PM': [
-    { name: 'Knitting Dept', path: '/dashboard/knitting-pm', icon: LayoutDashboard },
-    { name: 'Yarn Requests', path: '/dashboard/yarn-requests', icon: FileOutput },
-    { name: 'Transfers In/Out', path: '/dashboard/transfers', icon: ArrowRightLeft },
-  ],
-
-  'Knitting APM': [
-    { name: 'Work Today', path: '/dashboard/knitting-apm', icon: LayoutDashboard },
-    { name: 'Yarn Requests', path: '/dashboard/yarn-requests', icon: FileOutput },
-    { name: 'Transfers', path: '/dashboard/transfers', icon: ArrowRightLeft },
-  ],
-
-  'Linking PM': [
-    { name: 'Linking Dept', path: '/dashboard/linking-pm', icon: LayoutDashboard },
-    { name: 'Transfers In/Out', path: '/dashboard/transfers', icon: ArrowRightLeft },
-  ],
-
-  'Linking APM': [
-    { name: 'Work Today', path: '/dashboard/linking-apm', icon: LayoutDashboard },
-    { name: 'Transfers', path: '/dashboard/transfers', icon: ArrowRightLeft },
-  ],
-
-  'Cutting & Trimming PM': [
-    { name: 'Trimming Dept', path: '/dashboard/cutting-&-trimming-pm', icon: LayoutDashboard },
-    { name: 'Transfers In/Out', path: '/dashboard/transfers', icon: ArrowRightLeft },
-  ],
-
-  'Cutting & Trimming APM': [
-    { name: 'Work Today', path: '/dashboard/cutting-&-trimming-apm', icon: LayoutDashboard },
-    { name: 'Transfers', path: '/dashboard/transfers', icon: ArrowRightLeft },
-  ],
-
-  'Production PM': [
-    { name: 'Production Dept', path: '/dashboard/production-pm', icon: LayoutDashboard },
-    { name: 'Transfers In/Out', path: '/dashboard/transfers', icon: ArrowRightLeft },
-  ],
-
-  'Production APM': [
-    { name: 'Work Today', path: '/dashboard/production-apm', icon: LayoutDashboard },
-    { name: 'Transfers', path: '/dashboard/transfers', icon: ArrowRightLeft },
-  ],
-};
+// (ROLE_NAVIGATION removed, sidebar is now purely dynamic based on Supabase permissions)
 
 // ============================================================================
 // LAYOUT COMPONENT
 // ============================================================================
 
 export function DashboardLayout() {
-  const { profile, signOut, session, setDemoRole, demoRoles } = useAuth();
+  const { profile, signOut, session, setDemoRole, demoRoles, permissions } = useAuth();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
@@ -201,11 +82,52 @@ export function DashboardLayout() {
     ? profile.role.toLowerCase().replace(/&/g, '-').replace(/\s+/g, '-')
     : '';
 
-  const nav = profile?.role && ROLE_NAVIGATION[profile.role]
-    ? ROLE_NAVIGATION[profile.role]
-    : profile?.role
-    ? [{ name: 'Overview', path: `/dashboard/${roleSlug}`, icon: LayoutDashboard }]
-    : [];
+  // DYNAMIC NAVIGATION BUILDER based on Supabase role_permissions
+  const nav = [];
+  if (profile?.role && permissions) {
+    if (permissions.dashboard) {
+      nav.push({ name: 'Dashboard', path: `/dashboard/${roleSlug}`, icon: LayoutDashboard });
+    }
+    if (permissions.projects && permissions.projects !== 'none') {
+      nav.push({ name: 'Buyers', path: '/dashboard/merchandiser/buyers', icon: Users });
+      nav.push({ name: 'Projects', path: '/dashboard/merchandiser/projects', icon: FolderKanban });
+      nav.push({ name: 'BOMs', path: '/dashboard/merchandiser/boms', icon: FileText });
+      nav.push({ name: 'Purchase Orders', path: '/dashboard/merchandiser/pos', icon: ShoppingCart });
+    }
+    if (permissions.yarn && permissions.yarn !== 'none') {
+      nav.push({ name: 'Suppliers', path: '/dashboard/yarn-manager/suppliers', icon: Truck });
+      nav.push({ name: 'PO Queue', path: '/dashboard/yarn-manager/purchase-orders', icon: ShoppingCart });
+      nav.push({ name: 'Yarn Master', path: '/dashboard/yarn-manager/yarn-master', icon: FileText });
+      nav.push({ name: 'Receipts & QA', path: '/dashboard/yarn-manager/receipts', icon: ClipboardCheck });
+      nav.push({ name: 'Reservations', path: '/dashboard/yarn-manager/reservations', icon: Box });
+      nav.push({ name: 'KPO Generation', path: '/dashboard/yarn-manager/kpos', icon: Factory });
+    }
+    if (permissions.inventory && permissions.inventory !== 'none') {
+      nav.push({ name: 'Receiving', path: '/dashboard/inventory-manager/receiving', icon: PackageOpen });
+      nav.push({ name: 'Verification', path: '/dashboard/inventory-manager/verification', icon: CheckSquare });
+      nav.push({ name: 'Warehouse', path: '/dashboard/inventory-manager/warehouse', icon: Warehouse });
+      nav.push({ name: 'Material Requests', path: '/dashboard/inventory-manager/requests', icon: FileOutput });
+      nav.push({ name: 'Material Issues', path: '/dashboard/inventory-manager/issues', icon: ArrowLeftRight });
+      nav.push({ name: 'Returns & Adj', path: '/dashboard/inventory-manager/exceptions', icon: AlertTriangle });
+      nav.push({ name: 'Finished Goods', path: '/dashboard/inventory-manager/finished-goods', icon: PackageCheck });
+    }
+    if (permissions.production && permissions.production !== 'none') {
+      nav.push({ name: 'Production Workflow', path: '/dashboard/production-pm', icon: Factory });
+      nav.push({ name: 'Transfers', path: '/dashboard/transfers', icon: ArrowRightLeft });
+    }
+    if (permissions.reports && permissions.reports !== 'none') {
+      nav.push({ name: 'Reports', path: '/dashboard/merchandiser/reports', icon: BarChart3 });
+    }
+    if (permissions.admin && permissions.admin !== 'none') {
+      nav.push({ name: 'System Users', path: '/dashboard/admin/users', icon: UserCog });
+      nav.push({ name: 'Departments', path: '/dashboard/admin/departments', icon: Building });
+      nav.push({ name: 'Activity Log', path: '/dashboard/activity-log', icon: Activity });
+    }
+    nav.push({ name: 'Settings', path: '/dashboard/settings', icon: Settings });
+  } else if (profile?.role) {
+    // Fallback if permissions haven't loaded yet
+    nav.push({ name: 'Overview', path: `/dashboard/${roleSlug}`, icon: LayoutDashboard });
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex">

@@ -12,10 +12,22 @@ interface UserProfile {
   status: string;
 }
 
+interface RolePermissions {
+  role: string;
+  dashboard: boolean;
+  projects: string;
+  yarn: string;
+  inventory: string;
+  production: string;
+  reports: string;
+  admin: string;
+}
+
 interface AuthContextType {
   session: Session | null;
   user: User | null;
   profile: UserProfile | null;
+  permissions: RolePermissions | null;
   isLoading: boolean;
   setDemoRole: (role: string) => void;
   demoRoles: string[];
@@ -29,13 +41,7 @@ export const DEMO_ROLES: { role: string; full_name: string }[] = [
   { role: 'Admin', full_name: 'Demo Admin' },
   { role: 'Merchandiser', full_name: 'Demo Merchandiser' },
   { role: 'Yarn Manager', full_name: 'Demo Yarn Manager' },
-  { role: 'Inventory & Store Manager', full_name: 'Demo Inventory Manager' },
-  { role: 'Knitting PM', full_name: 'Demo Knitting PM' },
-  { role: 'Knitting APM', full_name: 'Demo Knitting APM' },
-  { role: 'Linking PM', full_name: 'Demo Linking PM' },
-  { role: 'Linking APM', full_name: 'Demo Linking APM' },
-  { role: 'Cutting & Trimming PM', full_name: 'Demo Cutting PM' },
-  { role: 'Cutting & Trimming APM', full_name: 'Demo Cutting APM' },
+  { role: 'Inventory Manager', full_name: 'Demo Inventory Manager' },
   { role: 'Production PM', full_name: 'Demo Production PM' },
   { role: 'Production APM', full_name: 'Demo Production APM' },
 ];
@@ -46,6 +52,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [permissions, setPermissions] = useState<RolePermissions | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -74,7 +81,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  const loadDemoProfile = () => {
+  const fetchRolePermissions = async (roleName: string) => {
+    const { data, error } = await supabase.from('role_permissions').select('*').eq('role', roleName).single();
+    if (!error && data) {
+      setPermissions(data as RolePermissions);
+    } else {
+      // Fallback default permissions if not in DB yet
+      setPermissions({
+        role: roleName,
+        dashboard: true,
+        projects: 'view',
+        yarn: 'view',
+        inventory: 'view',
+        production: 'view',
+        reports: 'view',
+        admin: 'none'
+      });
+    }
+    setIsLoading(false);
+  };
+
+  const loadDemoProfile = async () => {
     const activeRole = localStorage.getItem(DEMO_ROLE_KEY) || 'Director';
     const demo = DEMO_ROLES.find(d => d.role === activeRole) || DEMO_ROLES[0];
     setProfile({
@@ -86,7 +113,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       designation: demo.role,
       status: 'Active',
     });
-    setIsLoading(false);
+    await fetchRolePermissions(demo.role);
   };
 
   const fetchProfile = async (userId: string) => {
@@ -99,18 +126,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (error) {
         console.error('Error fetching profile:', error);
+        setIsLoading(false);
       } else {
         setProfile(data);
+        if (data.role) {
+          await fetchRolePermissions(data.role);
+        } else {
+          setIsLoading(false);
+        }
       }
     } catch (err) {
       console.error('Unexpected error fetching profile:', err);
-    } finally {
       setIsLoading(false);
     }
   };
 
   const setDemoRole = (role: string) => {
     localStorage.setItem(DEMO_ROLE_KEY, role);
+    setIsLoading(true);
     loadDemoProfile();
   };
 
@@ -118,10 +151,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await supabase.auth.signOut();
     localStorage.removeItem(DEMO_ROLE_KEY);
     setProfile(null);
+    setPermissions(null);
   };
 
   return (
-    <AuthContext.Provider value={{ session, user, profile, isLoading, setDemoRole, demoRoles: DEMO_ROLES.map(d => d.role), signOut }}>
+    <AuthContext.Provider value={{ session, user, profile, permissions, isLoading, setDemoRole, demoRoles: DEMO_ROLES.map(d => d.role), signOut }}>
       {children}
     </AuthContext.Provider>
   );
