@@ -162,7 +162,6 @@ export const router = createBrowserRouter([
               { path: 'receipts', element: <GoodsReceipts /> },
               { path: 'inventory', element: <YarnInventory /> },
               { path: 'reservations', element: <YarnReservations /> },
-              { path: 'kpos', element: <KPOGeneration /> },
             ],
           },
           {
@@ -208,6 +207,14 @@ export const router = createBrowserRouter([
               { path: ':id', element: <ProjectDetails /> },
               { path: ':id/bom', element: <BOMBuilder /> },
             ]
+          },
+          {
+            path: 'kpos',
+            element: (
+              <RoleProtectedRoute allowedRoles={['Director', 'Admin', 'Knitting PM', 'Knitting APM', 'Production PM', 'Production APM']}>
+                <KPOGeneration />
+              </RoleProtectedRoute>
+            ),
           },
 
           {

@@ -100,7 +100,6 @@ export function DashboardLayout() {
       nav.push({ name: 'Yarn Master', path: '/dashboard/yarn-manager/yarn-master', icon: FileText });
       nav.push({ name: 'Receipts & QA', path: '/dashboard/yarn-manager/receipts', icon: ClipboardCheck });
       nav.push({ name: 'Reservations', path: '/dashboard/yarn-manager/reservations', icon: Box });
-      nav.push({ name: 'KPO Generation', path: '/dashboard/yarn-manager/kpos', icon: Factory });
     }
     if (permissions.inventory && permissions.inventory !== 'none') {
       nav.push({ name: 'Receiving', path: '/dashboard/inventory-manager/receiving', icon: PackageOpen });
@@ -113,6 +112,7 @@ export function DashboardLayout() {
     }
     if (permissions.production && permissions.production !== 'none') {
       nav.push({ name: 'Production Workflow', path: '/dashboard/production-pm', icon: Factory });
+      nav.push({ name: 'KPO Generation', path: '/dashboard/kpos', icon: Factory });
       nav.push({ name: 'Transfers', path: '/dashboard/transfers', icon: ArrowRightLeft });
     }
     if (permissions.reports && permissions.reports !== 'none') {

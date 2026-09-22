@@ -13,7 +13,12 @@ class MockQueryBuilder implements PromiseLike<any> {
     this.table = table;
   }
 
-  select() { this.action = 'select'; return this; }
+  select() { 
+    if (this.action !== 'insert' && this.action !== 'update' && this.action !== 'delete') {
+      this.action = 'select'; 
+    }
+    return this; 
+  }
   insert(data: any) { this.action = 'insert'; this.payload = data; return this; }
   update(data: any) { this.action = 'update'; this.payload = data; return this; }
   delete() { this.action = 'delete'; return this; }
