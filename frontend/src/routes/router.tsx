@@ -17,6 +17,7 @@ import { ResetPassword } from '@/pages/auth/ResetPassword';
 // Dashboard Components
 import { ProtectedRoute } from '@/components/layout/ProtectedRoute';
 import { RoleProtectedRoute } from '@/components/layout/RoleProtectedRoute';
+import { getRolePath, PRODUCTION_ROLES } from '@/lib/roles';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { DashboardRedirect } from '@/pages/dashboards/DashboardRedirect';
 import { DirectorDashboard } from '@/pages/dashboards/DirectorDashboard';
@@ -59,23 +60,6 @@ import { MaterialIssues } from '@/pages/inventory-manager/MaterialIssues';
 import { Exceptions } from '@/pages/inventory-manager/Exceptions';
 import { FinishedGoods } from '@/pages/inventory-manager/FinishedGoods';
 import { InventoryReports } from '@/pages/inventory-manager/InventoryReports';
-
-const ROLES = [
-  'Inventory & Store Manager',
-  'Knitting PM',
-  'Knitting APM',
-  'Linking PM',
-  'Linking APM',
-  'Cutting & Trimming PM',
-  'Cutting & Trimming APM',
-  'Production PM',
-  'Production APM'
-];
-
-function roleToPath(role: string): string {
-  // Replace & first (with -), then spaces (with -)
-  return role.toLowerCase().replace(/&/g, '-').replace(/\s+/g, '-');
-}
 
 export const router = createBrowserRouter([
   {
@@ -183,8 +167,9 @@ export const router = createBrowserRouter([
               { path: 'reports', element: <InventoryReports /> },
             ],
           },
-          ...ROLES.map((role) => {
-            const rolePath = roleToPath(role);
+          // Generate dynamic routes for production roles
+          ...PRODUCTION_ROLES.map((role) => {
+            const rolePath = getRolePath(role);
             return {
               path: rolePath,
               element: (

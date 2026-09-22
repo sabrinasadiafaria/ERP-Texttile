@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { getRolePath } from '@/lib/roles';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import {
@@ -78,9 +79,7 @@ export function DashboardLayout() {
     ));
   };
 
-  const roleSlug = profile?.role
-    ? profile.role.toLowerCase().replace(/&/g, '-').replace(/\s+/g, '-')
-    : '';
+  const roleSlug = profile?.role ? getRolePath(profile.role) : '';
 
   // DYNAMIC NAVIGATION BUILDER based on Supabase role_permissions
   const nav = [];
@@ -111,7 +110,7 @@ export function DashboardLayout() {
       nav.push({ name: 'Finished Goods', path: '/dashboard/inventory-manager/finished-goods', icon: PackageCheck });
     }
     if (permissions.production && permissions.production !== 'none') {
-      nav.push({ name: 'Production Workflow', path: '/dashboard/production-pm', icon: Factory });
+      nav.push({ name: 'Production Workflow', path: `/dashboard/${roleSlug}`, icon: Factory });
       nav.push({ name: 'KPO Generation', path: '/dashboard/kpos', icon: Factory });
       nav.push({ name: 'Transfers', path: '/dashboard/transfers', icon: ArrowRightLeft });
     }

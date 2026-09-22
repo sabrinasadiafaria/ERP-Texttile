@@ -1,6 +1,7 @@
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Loader2 } from 'lucide-react';
+import { getRolePath } from '@/lib/roles';
 
 export function DashboardRedirect() {
   const { profile, isLoading } = useAuth();
@@ -24,8 +25,7 @@ export function DashboardRedirect() {
     );
   }
 
-  // Format the role to match our URL structure (e.g. "Yarn Manager" -> "yarn-manager")
-  const rolePath = profile.role.toLowerCase().replace(/ & /g, '-').replace(/ /g, '-');
+  const rolePath = getRolePath(profile.role);
   
   return <Navigate to={`/dashboard/${rolePath}`} replace />;
 }
