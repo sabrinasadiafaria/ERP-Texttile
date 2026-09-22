@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { Plus, Search, Edit2, Archive, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
@@ -50,10 +51,12 @@ export function BuyersList() {
           <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Buyers</h1>
           <p className="text-sm text-gray-500 mt-1">Manage your clients and buyers</p>
         </div>
-        <Button className="bg-[#0047ff] hover:bg-blue-700 text-white rounded-lg px-4 py-2 flex items-center">
-          <Plus className="w-4 h-4 mr-2" />
-          Add Buyer
-        </Button>
+        <Link to="/dashboard/merchandiser/buyers/new">
+          <Button className="bg-[#0047ff] hover:bg-blue-700 text-white rounded-lg px-4 py-2 flex items-center">
+            <Plus className="w-4 h-4 mr-2" />
+            Add Buyer
+          </Button>
+        </Link>
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
