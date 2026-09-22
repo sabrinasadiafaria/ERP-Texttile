@@ -114,7 +114,7 @@ export function BOMBuilder() {
     <div className="max-w-6xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
-          <Link to={`/dashboard/merchandiser/projects/${id}`} className="p-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+          <Link to={`/dashboard/projects/${id}`} className="p-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
             <ArrowLeft className="w-5 h-5 text-gray-600" />
           </Link>
           <div>

@@ -57,14 +57,14 @@ export function ProjectWizard() {
       setError(error.message);
       setIsLoading(false);
     } else {
-      navigate('/dashboard/merchandiser/projects');
+      navigate('/dashboard/projects');
     }
   };
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <div className="flex items-center space-x-4">
-        <Link to="/dashboard/merchandiser/projects" className="p-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+        <Link to="/dashboard/projects" className="p-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
           <ArrowLeft className="w-5 h-5 text-gray-600" />
         </Link>
         <div>
@@ -253,7 +253,7 @@ export function ProjectWizard() {
         </div>
 
         <div className="p-6 bg-gray-50 border-t border-gray-100 flex justify-end space-x-3">
-          <Link to="/dashboard/merchandiser/projects">
+          <Link to="/dashboard/projects">
             <Button type="button" variant="outline" className="px-6">Cancel</Button>
           </Link>
           <Button 

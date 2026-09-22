@@ -88,7 +88,7 @@ export function ProjectDetails() {
     <div className="max-w-6xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
-          <Link to="/dashboard/merchandiser/projects" className="p-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+          <Link to="/dashboard/projects" className="p-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
             <ArrowLeft className="w-5 h-5 text-gray-600" />
           </Link>
           <div>
@@ -102,7 +102,7 @@ export function ProjectDetails() {
             {project.status}
           </span>
           <Link
-            to={`/dashboard/merchandiser/projects/${project.id}/bom`}
+            to={`/dashboard/projects/${project.id}/bom`}
             className="p-2 rounded-lg bg-white border border-gray-200 text-gray-600 hover:text-[#0047ff] hover:bg-blue-50 hover:border-[#0047ff] flex items-center justify-center transition-colors"
             title="Bill of Materials"
           >

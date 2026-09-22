@@ -90,7 +90,7 @@ export function DashboardLayout() {
     }
     if (permissions.projects && permissions.projects !== 'none') {
       nav.push({ name: 'Buyers', path: '/dashboard/merchandiser/buyers', icon: Users });
-      nav.push({ name: 'Projects', path: '/dashboard/merchandiser/projects', icon: FolderKanban });
+      nav.push({ name: 'Projects', path: '/dashboard/projects', icon: FolderKanban });
       nav.push({ name: 'BOMs', path: '/dashboard/merchandiser/boms', icon: FileText });
       nav.push({ name: 'Purchase Orders', path: '/dashboard/merchandiser/pos', icon: ShoppingCart });
     }

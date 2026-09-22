@@ -54,7 +54,7 @@ export function ProjectsList() {
           <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Projects</h1>
           <p className="text-sm text-gray-500 mt-1">Manage production projects from PO to shipment</p>
         </div>
-        <Link to="/dashboard/merchandiser/projects/new">
+        <Link to="/dashboard/projects/new">
           <Button className="bg-[#0047ff] hover:bg-blue-700 text-white rounded-lg px-4 py-2 flex items-center">
             <Plus className="w-4 h-4 mr-2" />
             Create Project

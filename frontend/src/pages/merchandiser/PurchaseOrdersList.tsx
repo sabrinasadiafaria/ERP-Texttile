@@ -86,7 +86,7 @@ export function PurchaseOrdersList() {
                     <td className="py-4 px-6 font-medium text-gray-900">{po.po_number}</td>
                     <td className="py-4 px-6 text-sm text-gray-600">{po.supplier}</td>
                     <td className="py-4 px-6 text-sm text-gray-600">
-                      <Link to={`/dashboard/merchandiser/projects/${po.project_id}`} className="hover:text-[#0047ff] hover:underline">
+                      <Link to={`/dashboard/projects/${po.project_id}`} className="hover:text-[#0047ff] hover:underline">
                         {po.projects?.order_number}
                       </Link>
                     </td>

@@ -77,7 +77,7 @@ export function BOMsList() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <Link 
-                          to={`/dashboard/merchandiser/projects/${bom.project_id}/bom`}
+                          to={`/dashboard/projects/${bom.project_id}/bom`}
                           className="text-[#0047ff] hover:text-blue-900 flex items-center justify-end"
                         >
                           View Details <ArrowRight className="w-4 h-4 ml-1" />
@@ -97,7 +97,7 @@ export function BOMsList() {
               </p>
               <div className="mt-6">
                 <Link 
-                  to="/dashboard/merchandiser/projects"
+                  to="/dashboard/projects"
                   className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-[#0047ff] hover:bg-blue-700"
                 >
                   View Projects

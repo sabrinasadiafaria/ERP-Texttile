@@ -252,11 +252,11 @@ export const DEMO_ACTIVITY_LOGS: ActivityLog[] = [
 // ============================================================================
 
 export const DEMO_NOTIFICATIONS: Notification[] = [
-  { id: 'notif-001', user_id: 'user-dir-001', title: 'Production Delay Alert', message: 'Project AE-2026-004 is 12 days behind schedule. Washing department needs immediate attention.', type: 'warning', is_read: false, link: '/dashboard/merchandiser/projects/proj-004', created_at: '2026-02-20T08:00:00Z' },
+  { id: 'notif-001', user_id: 'user-dir-001', title: 'Production Delay Alert', message: 'Project AE-2026-004 is 12 days behind schedule. Washing department needs immediate attention.', type: 'warning', is_read: false, link: '/dashboard/projects/proj-004', created_at: '2026-02-20T08:00:00Z' },
   { id: 'notif-002', user_id: 'user-dir-001', title: 'Transfer Pending Approval', message: '4 transfer requests are awaiting acceptance across departments.', type: 'info', is_read: false, link: '/dashboard/director/transfers', created_at: '2026-02-20T07:30:00Z' },
   { id: 'notif-003', user_id: 'user-yarn-001', title: 'New Yarn Request', message: 'Merchandiser submitted yarn request for AE-2026-006 (15,000 kg Superfine Merino)', type: 'info', is_read: false, link: '/dashboard/yarn-manager', created_at: '2026-01-20T09:00:00Z' },
   { id: 'notif-004', user_id: 'user-sew-001', title: 'New Transfer Incoming', message: 'Project AE-2026-001: 14,200 pcs ready for transfer from Sewing to Washing', type: 'info', is_read: false, link: '/dashboard/production-apm/sewing', created_at: '2026-02-20T16:30:00Z' },
-  { id: 'notif-005', user_id: 'user-merc-001', title: 'Project Delayed', message: 'Project AE-2026-004 status changed to Delayed. New expected completion: April 10, 2026.', type: 'error', is_read: false, link: '/dashboard/merchandiser/projects/proj-004', created_at: '2026-02-20T10:15:00Z' },
+  { id: 'notif-005', user_id: 'user-merc-001', title: 'Project Delayed', message: 'Project AE-2026-004 status changed to Delayed. New expected completion: April 10, 2026.', type: 'error', is_read: false, link: '/dashboard/projects/proj-004', created_at: '2026-02-20T10:15:00Z' },
   { id: 'notif-006', user_id: 'user-link-001', title: 'Transfer Created', message: 'Transfer request for AE-2026-002: 4,100 pcs from Linking to Trimming', type: 'info', is_read: true, link: '/dashboard/linking-apm', created_at: '2026-02-20T15:00:00Z' },
   { id: 'notif-007', user_id: 'user-admin-001', title: 'User Login', message: 'New login detected from new device for user admin@alaminexport.com', type: 'info', is_read: true, link: null, created_at: '2026-02-19T09:00:00Z' },
 ];

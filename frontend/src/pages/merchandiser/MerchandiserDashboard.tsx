@@ -81,7 +81,7 @@ export function MerchandiserDashboard() {
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-lg font-bold text-gray-900">Recent Projects</h2>
-            <Link to="/dashboard/merchandiser/projects" className="text-sm font-medium text-[#0047ff] hover:underline">View All</Link>
+            <Link to="/dashboard/projects" className="text-sm font-medium text-[#0047ff] hover:underline">View All</Link>
           </div>
           <div className="flex items-center justify-center h-48 bg-gray-50 rounded-lg border border-dashed border-gray-200">
              <span className="text-gray-400 text-sm">Chart Placeholder</span>

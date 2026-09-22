@@ -138,10 +138,7 @@ export const router = createBrowserRouter([
               { index: true, element: <MerchandiserDashboard /> },
               { path: 'buyers', element: <BuyersList /> },
               { path: 'buyers/new', element: <BuyerForm /> },
-              { path: 'projects', element: <ProjectsList /> },
-              { path: 'projects/new', element: <ProjectWizard /> },
-              { path: 'projects/:id', element: <ProjectDetails /> },
-              { path: 'projects/:id/bom', element: <BOMBuilder /> },
+
               { path: 'boms', element: <BOMsList /> },
               { path: 'pos', element: <PurchaseOrdersList /> },
               { path: 'reports', element: <MerchandiserReports /> },
@@ -199,12 +196,18 @@ export const router = createBrowserRouter([
             };
           }),
           {
-            path: 'projects/:id',
+            path: 'projects',
             element: (
               <RoleProtectedRoute allowedRoles={['Director', 'Admin', 'Merchandiser', 'Knitting PM', 'Knitting APM', 'Linking PM', 'Linking APM', 'Cutting & Trimming PM', 'Cutting & Trimming APM', 'Production PM', 'Production APM']}>
-                <ProjectDetails />
+                <Outlet />
               </RoleProtectedRoute>
             ),
+            children: [
+              { index: true, element: <ProjectsList /> },
+              { path: 'new', element: <ProjectWizard /> },
+              { path: ':id', element: <ProjectDetails /> },
+              { path: ':id/bom', element: <BOMBuilder /> },
+            ]
           },
 
           {

@@ -327,7 +327,7 @@ export function DirectorDashboard() {
           <h2 className="text-lg font-bold text-gray-900 mb-4">Quick Access</h2>
           <div className="space-y-3">
             {[
-              { label: 'All Projects', path: '/dashboard/merchandiser/projects', icon: FolderKanban, count: DEMO_PROJECTS.length },
+              { label: 'All Projects', path: '/dashboard/projects', icon: FolderKanban, count: DEMO_PROJECTS.length },
               { label: 'Pending Transfers', path: '/dashboard/transfers', icon: ArrowRight, count: DEMO_TRANSFERS.filter(t => t.status === 'Pending').length },
               { label: 'Production Reports', path: '/dashboard/merchandiser/reports', icon: BarChart3, count: null },
               { label: 'User Management', path: '/dashboard/admin/users', icon: Activity, count: null },
