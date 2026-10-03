@@ -104,6 +104,33 @@ export function BOMBuilder() {
     setIsLoading(false);
   };
 
+  const handleGenerateYarnRequests = async () => {
+    if (items.length === 0) return;
+    setIsLoading(true);
+    
+    const yarnItems = items.filter(i => i.category.toLowerCase() === 'yarn');
+    if (yarnItems.length === 0) {
+      alert('No yarn items found in BOM.');
+      setIsLoading(false);
+      return;
+    }
+
+    const { data: userData } = await supabase.auth.getUser();
+
+    for (const item of yarnItems) {
+      await supabase.from('yarn_requests').insert([{
+        project_id: id,
+        bom_id: item.id,
+        requested_quantity: item.required_qty,
+        status: 'PENDING',
+        requested_by: userData.user?.id
+      }]);
+    }
+
+    alert('Yarn Requests Generated Successfully!');
+    setIsLoading(false);
+  };
+
   const totalCost = items.reduce((sum, item) => sum + (item.required_qty * item.estimated_cost), 0);
 
   if (isLoading) {
@@ -124,6 +151,9 @@ export function BOMBuilder() {
         </div>
         
         <div className="flex space-x-3">
+          <Button onClick={handleGenerateYarnRequests} variant="outline" className="flex items-center text-gray-600 bg-gray-50 border-gray-200 hover:bg-gray-100">
+            Request Yarn
+          </Button>
           <Button onClick={handleGeneratePOs} variant="outline" className="flex items-center text-gray-600 bg-gray-50 border-gray-200 hover:bg-gray-100">
             Generate POs
           </Button>

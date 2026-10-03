@@ -3,7 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Loader2 } from 'lucide-react';
 
 export function ProtectedRoute() {
-  const { session, isLoading } = useAuth();
+  const { session, profile, isLoading } = useAuth();
   const location = useLocation();
 
   if (isLoading) {
@@ -17,6 +17,10 @@ export function ProtectedRoute() {
   if (!session) {
     // Redirect to login while saving the attempted URL
     return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  if (profile?.status === 'pending') {
+    return <Navigate to="/pending-approval" replace />;
   }
 
   return <Outlet />;

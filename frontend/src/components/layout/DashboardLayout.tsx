@@ -58,6 +58,11 @@ const ROLE_NAVIGATION: Record<string, { name: string; path: string; icon: any }[
     { name: 'Finished Goods', path: '/dashboard/inventory-manager/finished-goods', icon: PackageCheck },
     { name: 'Reports', path: '/dashboard/inventory-manager/reports', icon: BarChart3 },
   ],
+  'Admin': [
+    { name: 'Dashboard', path: '/dashboard/admin', icon: LayoutDashboard },
+    { name: 'User Management', path: '/dashboard/admin/users', icon: Users },
+    { name: 'Activity Logs', path: '/dashboard/admin/logs', icon: ClipboardCheck },
+  ],
 };
 
 export function DashboardLayout() {
