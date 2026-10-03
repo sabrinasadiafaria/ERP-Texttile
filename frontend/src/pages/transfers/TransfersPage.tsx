@@ -3,14 +3,14 @@ import {
   ArrowRightLeft, CheckCircle2, XCircle, AlertTriangle,
   Filter, Loader2, Clock, Calculator, ArrowRight, FileText,
 } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
 import {
-  DEMO_TRANSFERS,
-  DEMO_DEPARTMENT_RECORDS,
-  DEMO_PROJECTS,
-  DEMO_ACTIVITY_LOGS,
-} from '@/lib/services/demoData';
-import type { Transfer, TransferStatus, ActivityLog } from '@/lib/services/production';
+  ArrowRightLeft, CheckCircle2, XCircle, AlertTriangle,
+  Filter, Loader2, Clock, Calculator, ArrowRight, FileText,
+} from 'lucide-react';
+import type { TransferStatus } from '@/lib/services/production';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/lib/supabase';
 
 type ValidationIssue =
   | { type: 'exceeds_produced'; message: string }
@@ -18,15 +18,8 @@ type ValidationIssue =
   | { type: 'mismatch_rejected'; message: string }
   | { type: 'ok'; message: string };
 
-/**
- * Mathematical quantity validation.
- * Rules:
- *  - Transfer quantity must be ≤ produced_quantity of from-dept record (you can't ship more than you made)
- *  - If rejected_quantity > 0, rejected + accepted quantity must equal transferred quantity
- *  - Source record must exist
- */
-function validateTransfer(t: Transfer): ValidationIssue {
-  const sourceRecord = DEMO_DEPARTMENT_RECORDS.find(
+function validateTransfer(t: any, records: any[]): ValidationIssue {
+  const sourceRecord = records.find(
     r => r.project_id === t.project_id && r.department === t.from_department
   );
 
@@ -41,7 +34,7 @@ function validateTransfer(t: Transfer): ValidationIssue {
     };
   }
 
-  const totalAccountedFor = t.quantity + t.rejected_quantity;
+  const totalAccountedFor = t.quantity + (t.rejected_quantity || 0);
   if (totalAccountedFor > sourceRecord.produced_quantity) {
     return {
       type: 'mismatch_rejected',
@@ -51,100 +44,133 @@ function validateTransfer(t: Transfer): ValidationIssue {
 
   return {
     type: 'ok',
-    message: `Math OK: ${t.quantity.toLocaleString()} shipped + ${t.rejected_quantity.toLocaleString()} rejected = ${totalAccountedFor.toLocaleString()} / ${sourceRecord.produced_quantity.toLocaleString()} produced.`,
+    message: `Math OK: ${t.quantity.toLocaleString()} shipped + ${(t.rejected_quantity || 0).toLocaleString()} rejected = ${totalAccountedFor.toLocaleString()} / ${sourceRecord.produced_quantity.toLocaleString()} produced.`,
   };
-}
-
-interface AuditEntry {
-  id: string;
-  transfer: Transfer;
-  action: 'accepted' | 'rejected' | 'partially_accepted';
-  actor: string;
-  timestamp: string;
-  remarks: string;
-  rejectedQuantity: number;
 }
 
 export function TransfersPage() {
   const { profile } = useAuth();
-  const [transfers, setTransfers] = useState<Transfer[]>([]);
+  const [transfers, setTransfers] = useState<any[]>([]);
+  const [records, setRecords] = useState<any[]>([]);
+  const [projects, setProjects] = useState<any[]>([]);
+  const [transferLogs, setTransferLogs] = useState<any[]>([]);
   const [filterStatus, setFilterStatus] = useState<'All' | TransferStatus>('All');
-  const [auditLog, setAuditLog] = useState<AuditEntry[]>([]);
+  const [auditLog, setAuditLog] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
-  useEffect(() => {
-    setTransfers(DEMO_TRANSFERS);
+  const fetchData = async () => {
+    setIsLoading(true);
+    const [
+      { data: transfersData },
+      { data: recordsData },
+      { data: projectsData },
+      { data: logsData }
+    ] = await Promise.all([
+      supabase.from('production_transfers').select('*').order('created_at', { ascending: false }),
+      supabase.from('production_records').select('*'),
+      supabase.from('projects').select('*, buyers(company_name)'),
+      supabase.from('activity_logs').select('*').eq('module', 'transfer').order('created_at', { ascending: false }).limit(10)
+    ]);
+
+    if (transfersData) setTransfers(transfersData);
+    if (recordsData) setRecords(recordsData);
+    if (projectsData) setProjects(projectsData);
+    if (logsData) setTransferLogs(logsData);
     setIsLoading(false);
+  };
+
+  useEffect(() => {
+    fetchData();
   }, []);
 
   const filtered = useMemo(() => {
     if (filterStatus === 'All') return transfers;
-    return transfers.filter(t => t.status === filterStatus);
+    return transfers.filter(t => t.status.toUpperCase() === filterStatus.toUpperCase());
   }, [transfers, filterStatus]);
 
   const stats = useMemo(() => ({
     total: transfers.length,
-    pending: transfers.filter(t => t.status === 'Pending').length,
-    accepted: transfers.filter(t => t.status === 'Accepted' || t.status === 'Completed').length,
-    rejected: transfers.filter(t => t.status === 'Rejected').length,
+    pending: transfers.filter(t => t.status === 'Pending' || t.status === 'PENDING').length,
+    accepted: transfers.filter(t => t.status === 'Accepted' || t.status === 'ACCEPTED' || t.status === 'COMPLETED').length,
+    rejected: transfers.filter(t => t.status === 'Rejected' || t.status === 'REJECTED').length,
   }), [transfers]);
 
-  const handleAccept = (id: string) => {
-    const t = transfers.find(x => x.id === id);
-    if (!t) return;
-    const updated: Transfer = { ...t, status: 'Completed', accepted_by: profile?.id || 'user-system', accepted_at: new Date().toISOString() };
-    setTransfers(prev => prev.map(x => x.id === id ? updated : x));
+  const handleAccept = async (id: string, t: any) => {
+    await supabase.from('production_transfers').update({
+      status: 'ACCEPTED',
+      accepted_quantity: t.quantity,
+      accepted_by: profile?.id,
+      accepted_at: new Date().toISOString()
+    }).eq('id', id);
+
+    await supabase.from('activity_logs').insert({
+      user_id: profile?.id,
+      action: 'ACCEPT',
+      module: 'transfer',
+      description: `Accepted transfer ${id}`
+    });
+
     setAuditLog(prev => [{
       id: `audit-${Date.now()}-accept`,
-      transfer: updated,
       action: 'accepted',
       actor: profile?.full_name || 'System',
       timestamp: new Date().toISOString(),
-      remarks: 'Full acceptance recorded from UI.',
-      rejectedQuantity: 0,
+      remarks: 'Full acceptance recorded.',
     }, ...prev]);
+    fetchData();
   };
 
-  const handleReject = (id: string) => {
-    const t = transfers.find(x => x.id === id);
-    if (!t) return;
-    const updated: Transfer = { ...t, status: 'Rejected', accepted_by: profile?.id || 'user-system', accepted_at: new Date().toISOString() };
-    setTransfers(prev => prev.map(x => x.id === id ? updated : x));
+  const handleReject = async (id: string, t: any) => {
+    await supabase.from('production_transfers').update({
+      status: 'REJECTED',
+      rejected_quantity: t.quantity,
+      accepted_by: profile?.id,
+      accepted_at: new Date().toISOString()
+    }).eq('id', id);
+
+    await supabase.from('activity_logs').insert({
+      user_id: profile?.id,
+      action: 'REJECT',
+      module: 'transfer',
+      description: `Rejected transfer ${id}`
+    });
+
     setAuditLog(prev => [{
       id: `audit-${Date.now()}-reject`,
-      transfer: updated,
       action: 'rejected',
       actor: profile?.full_name || 'System',
       timestamp: new Date().toISOString(),
-      remarks: 'Rejected from UI.',
-      rejectedQuantity: 0,
+      remarks: 'Rejected.',
     }, ...prev]);
+    fetchData();
   };
 
-  const handlePartialAccept = (id: string) => {
-    const t = transfers.find(x => x.id === id);
-    if (!t) return;
-    const partialQty = Math.floor(t.quantity / 2);
-    const rejected = t.quantity - partialQty;
-    const updated: Transfer = {
-      ...t,
-      status: 'Partially Accepted',
-      accepted_by: profile?.id || 'user-system',
-      accepted_at: new Date().toISOString(),
-      quantity: partialQty,
-      rejected_quantity: rejected,
-    };
-    setTransfers(prev => prev.map(x => x.id === id ? updated : x));
+  const handlePartialAccept = async (id: string, t: any, acceptedQty: number) => {
+    const rejectedQty = t.quantity - acceptedQty;
+    await supabase.from('production_transfers').update({
+      status: 'PARTIAL',
+      accepted_quantity: acceptedQty,
+      rejected_quantity: rejectedQty,
+      accepted_by: profile?.id,
+      accepted_at: new Date().toISOString()
+    }).eq('id', id);
+
+    await supabase.from('activity_logs').insert({
+      user_id: profile?.id,
+      action: 'PARTIAL_ACCEPT',
+      module: 'transfer',
+      description: `Partially accepted transfer ${id}`
+    });
+
     setAuditLog(prev => [{
       id: `audit-${Date.now()}-partial`,
-      transfer: updated,
       action: 'partially_accepted',
       actor: profile?.full_name || 'System',
       timestamp: new Date().toISOString(),
-      remarks: `Partial acceptance: ${partialQty.toLocaleString()} accepted, ${rejected.toLocaleString()} rejected.`,
-      rejectedQuantity: rejected,
+      remarks: `Partial acceptance: ${acceptedQty} accepted, ${rejectedQty} rejected.`,
     }, ...prev]);
+    fetchData();
   };
 
   if (isLoading) {
@@ -165,13 +191,8 @@ export function TransfersPage() {
   ];
 
   const selected = selectedId ? transfers.find(t => t.id === selectedId) : null;
-  const selectedValidation = selected ? validateTransfer(selected) : null;
-  const selectedProject = selected ? DEMO_PROJECTS.find(p => p.id === selected.project_id) : null;
-
-  // Recent activity logs scoped to transfers
-  const transferLogs: ActivityLog[] = DEMO_ACTIVITY_LOGS
-    .filter(l => l.entity_type === 'transfer')
-    .slice(0, 6);
+  const selectedValidation = selected ? validateTransfer(selected, records) : null;
+  const selectedProject = selected ? projects.find(p => p.id === selected.project_id) : null;
 
   return (
     <div className="space-y-6">
@@ -228,8 +249,8 @@ export function TransfersPage() {
           ) : (
             <div className="divide-y divide-gray-100">
               {filtered.map(t => {
-                const validation = validateTransfer(t);
-                const proj = DEMO_PROJECTS.find(p => p.id === t.project_id);
+                const validation = validateTransfer(t, records);
+                const proj = projects.find(p => p.id === t.project_id);
                 const isSelected = selectedId === t.id;
                 return (
                   <button
@@ -268,7 +289,7 @@ export function TransfersPage() {
                             </span>
                           )}
                           <span className="text-xs text-gray-400">
-                            {new Date(t.requested_at).toLocaleString('en-GB', {
+                            {new Date(t.created_at || new Date()).toLocaleString('en-GB', {
                               day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit'
                             })}
                           </span>
@@ -322,31 +343,34 @@ export function TransfersPage() {
                   </div>
                 </div>
 
-                {selected.status === 'Pending' && (
+                {selected.status === 'Pending' || selected.status === 'PENDING' ? (
                   <div className="mt-4 pt-4 border-t border-gray-100 grid grid-cols-3 gap-2">
                     <button
-                      onClick={() => handleAccept(selected.id)}
+                      onClick={() => handleAccept(selected.id, selected)}
                       className="flex items-center justify-center gap-1 px-3 py-2 rounded-lg bg-green-50 text-green-700 hover:bg-green-100 transition-colors text-xs font-medium"
                     >
                       <CheckCircle2 className="w-4 h-4" />
                       Accept
                     </button>
                     <button
-                      onClick={() => handlePartialAccept(selected.id)}
+                      onClick={() => {
+                        const approved = prompt(`Partial approval — accepted qty (max ${selected.quantity}):`, String(Math.floor(selected.quantity / 2)));
+                        if (approved) handlePartialAccept(selected.id, selected, parseFloat(approved));
+                      }}
                       className="flex items-center justify-center gap-1 px-3 py-2 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors text-xs font-medium"
                     >
                       <Calculator className="w-4 h-4" />
                       Partial
                     </button>
                     <button
-                      onClick={() => handleReject(selected.id)}
+                      onClick={() => handleReject(selected.id, selected)}
                       className="flex items-center justify-center gap-1 px-3 py-2 rounded-lg bg-red-50 text-red-700 hover:bg-red-100 transition-colors text-xs font-medium"
                     >
                       <XCircle className="w-4 h-4" />
                       Reject
                     </button>
                   </div>
-                )}
+                ) : null}
               </div>
 
               {/* Validation Card */}

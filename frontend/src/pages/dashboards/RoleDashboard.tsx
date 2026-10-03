@@ -1,12 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { 
-  TrendingUp, 
   Clock, 
   CheckCircle2,
   Activity,
-  Loader2,
-  ArrowRight
+  Loader2
 } from 'lucide-react';
 import { productionService, DEPARTMENTS } from '@/lib/services/productionService';
 import { Button } from '@/components/ui/Button';

@@ -51,11 +51,6 @@ export function FinishedGoods() {
     }
   };
 
-  const handleUpdateStatus = async (id: string, status: string) => {
-    await supabase.from('finished_goods_cartons').update({ shipment_status: status }).eq('id', id);
-    fetchData();
-  };
-
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">

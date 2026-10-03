@@ -4,10 +4,7 @@ import {
   Plus, Loader2, Package, AlertTriangle, ArrowRight, Calculator, FileText,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import {
-  DEMO_PROJECTS,
-  DEMO_ACTIVITY_LOGS,
-} from '@/lib/services/demoData';
+import { supabase } from '@/lib/supabase';
 import type { ActivityLog } from '@/lib/services/production';
 
 export type YarnRequestStatus = 'Pending' | 'Approved' | 'Partially Approved' | 'Rejected' | 'Issued';
@@ -28,57 +25,11 @@ export interface YarnRequest {
   remarks: string;
 }
 
-const INITIAL_REQUESTS: YarnRequest[] = [
-  {
-    id: 'yr-001',
-    project_id: 'proj-006',
-    yarn_type: '100% Superfine Merino',
-    quantity_kg: 15000,
-    approved_quantity_kg: 0,
-    rejected_quantity_kg: 0,
-    issued_quantity_kg: 0,
-    status: 'Pending',
-    requested_by: 'user-merc-001',
-    requested_at: '2026-01-20T09:00:00Z',
-    approved_by: null,
-    approved_at: null,
-    remarks: 'Urgent — buyer wants delivery by May 1',
-  },
-  {
-    id: 'yr-002',
-    project_id: 'proj-008',
-    yarn_type: '100% GOTS Organic Cotton',
-    quantity_kg: 22000,
-    approved_quantity_kg: 22000,
-    rejected_quantity_kg: 0,
-    issued_quantity_kg: 18500,
-    status: 'Issued',
-    requested_by: 'user-knit-001',
-    requested_at: '2026-01-15T08:00:00Z',
-    approved_by: 'user-yarn-001',
-    approved_at: '2026-01-16T10:00:00Z',
-    remarks: 'Issued in two batches — 18,500 kg released to Knitting',
-  },
-  {
-    id: 'yr-003',
-    project_id: 'proj-003',
-    yarn_type: '100% Organic Cotton',
-    quantity_kg: 27000,
-    approved_quantity_kg: 25000,
-    rejected_quantity_kg: 2000,
-    issued_quantity_kg: 25000,
-    status: 'Partially Approved',
-    requested_by: 'user-knit-001',
-    requested_at: '2026-01-12T09:00:00Z',
-    approved_by: 'user-yarn-001',
-    approved_at: '2026-01-13T11:00:00Z',
-    remarks: 'Stock shortage — 2,000 kg to be sourced later',
-  },
-];
-
 export function YarnRequestPage() {
   const { profile } = useAuth();
-  const [requests, setRequests] = useState<YarnRequest[]>([]);
+  const [requests, setRequests] = useState<any[]>([]);
+  const [projects, setProjects] = useState<any[]>([]);
+  const [yarnLogs, setYarnLogs] = useState<any[]>([]);
   const [filterStatus, setFilterStatus] = useState<'All' | YarnRequestStatus>('All');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -90,9 +41,26 @@ export function YarnRequestPage() {
   const [formQty, setFormQty] = useState('');
   const [formRemarks, setFormRemarks] = useState('');
 
-  useEffect(() => {
-    setRequests(INITIAL_REQUESTS);
+  const fetchData = async () => {
+    setIsLoading(true);
+    const [
+      { data: reqData },
+      { data: projData },
+      { data: logsData }
+    ] = await Promise.all([
+      supabase.from('yarn_requests').select('*').order('created_at', { ascending: false }),
+      supabase.from('projects').select('*, buyers(company_name)').neq('status', 'Completed'),
+      supabase.from('activity_logs').select('*').eq('module', 'yarn').order('created_at', { ascending: false }).limit(6)
+    ]);
+    
+    if (reqData) setRequests(reqData);
+    if (projData) setProjects(projData);
+    if (logsData) setYarnLogs(logsData);
     setIsLoading(false);
+  };
+
+  useEffect(() => {
+    fetchData();
   }, []);
 
   const filtered = useMemo(() => {
@@ -102,91 +70,106 @@ export function YarnRequestPage() {
 
   const stats = useMemo(() => ({
     total: requests.length,
-    pending: requests.filter(r => r.status === 'Pending').length,
-    approved: requests.filter(r => r.status === 'Approved' || r.status === 'Issued').length,
+    pending: requests.filter(r => r.status === 'Pending' || r.status === 'PENDING').length,
+    approved: requests.filter(r => r.status === 'Approved' || r.status === 'APPROVED' || r.status === 'Issued' || r.status === 'ISSUED').length,
     partial: requests.filter(r => r.status === 'Partially Approved').length,
-    rejected: requests.filter(r => r.status === 'Rejected').length,
+    rejected: requests.filter(r => r.status === 'Rejected' || r.status === 'REJECTED').length,
   }), [requests]);
 
-  const handleApprove = (id: string) => {
-    setRequests(prev => prev.map(r =>
-      r.id === id
-        ? {
-            ...r,
-            status: 'Approved',
-            approved_quantity_kg: r.quantity_kg,
-            approved_by: profile?.id || 'user-yarn-001',
-            approved_at: new Date().toISOString(),
-          }
-        : r
-    ));
+  const handleApprove = async (id: string, req: any) => {
+    await supabase.from('yarn_requests').update({
+      status: 'Approved',
+      approved_quantity: req.requested_quantity,
+      approved_by: profile?.id,
+      approved_at: new Date().toISOString()
+    }).eq('id', id);
+    
+    await supabase.from('activity_logs').insert({
+      user_id: profile?.id,
+      action: 'APPROVE',
+      module: 'yarn',
+      description: `Approved request ${id} for ${req.requested_quantity} kg`
+    });
+    fetchData();
   };
 
-  const handlePartialApprove = (id: string, approvedQty: number) => {
-    setRequests(prev => prev.map(r =>
-      r.id === id
-        ? {
-            ...r,
-            status: 'Partially Approved',
-            approved_quantity_kg: approvedQty,
-            rejected_quantity_kg: r.quantity_kg - approvedQty,
-            approved_by: profile?.id || 'user-yarn-001',
-            approved_at: new Date().toISOString(),
-          }
-        : r
-    ));
+  const handlePartialApprove = async (id: string, req: any, approvedQty: number) => {
+    const rejectedQty = req.requested_quantity - approvedQty;
+    await supabase.from('yarn_requests').update({
+      status: 'Partially Approved',
+      approved_quantity: approvedQty,
+      rejected_quantity: rejectedQty,
+      approved_by: profile?.id,
+      approved_at: new Date().toISOString()
+    }).eq('id', id);
+
+    await supabase.from('activity_logs').insert({
+      user_id: profile?.id,
+      action: 'PARTIAL_APPROVE',
+      module: 'yarn',
+      description: `Partially approved request ${id} for ${approvedQty} kg`
+    });
+    fetchData();
   };
 
-  const handleReject = (id: string) => {
-    setRequests(prev => prev.map(r =>
-      r.id === id
-        ? {
-            ...r,
-            status: 'Rejected',
-            approved_quantity_kg: 0,
-            rejected_quantity_kg: r.quantity_kg,
-            approved_by: profile?.id || 'user-yarn-001',
-            approved_at: new Date().toISOString(),
-          }
-        : r
-    ));
+  const handleReject = async (id: string, req: any) => {
+    await supabase.from('yarn_requests').update({
+      status: 'Rejected',
+      approved_quantity: 0,
+      rejected_quantity: req.requested_quantity,
+      approved_by: profile?.id,
+      approved_at: new Date().toISOString()
+    }).eq('id', id);
+
+    await supabase.from('activity_logs').insert({
+      user_id: profile?.id,
+      action: 'REJECT',
+      module: 'yarn',
+      description: `Rejected request ${id}`
+    });
+    fetchData();
   };
 
-  const handleIssue = (id: string) => {
-    setRequests(prev => prev.map(r =>
-      r.id === id
-        ? {
-            ...r,
-            status: 'Issued',
-            issued_quantity_kg: r.approved_quantity_kg,
-          }
-        : r
-    ));
+  const handleIssue = async (id: string, req: any) => {
+    await supabase.from('yarn_requests').update({
+      status: 'Issued',
+      issued_quantity: req.approved_quantity,
+    }).eq('id', id);
+
+    await supabase.from('activity_logs').insert({
+      user_id: profile?.id,
+      action: 'ISSUE',
+      module: 'yarn',
+      description: `Issued ${req.approved_quantity} kg for request ${id}`
+    });
+    fetchData();
   };
 
-  const handleCreate = () => {
+  const handleCreate = async () => {
     if (!formProject || !formYarn || !formQty) return;
-    const newReq: YarnRequest = {
-      id: `yr-${Date.now()}`,
+    
+    await supabase.from('yarn_requests').insert({
       project_id: formProject,
       yarn_type: formYarn,
-      quantity_kg: parseFloat(formQty),
-      approved_quantity_kg: 0,
-      rejected_quantity_kg: 0,
-      issued_quantity_kg: 0,
+      requested_quantity: parseFloat(formQty),
       status: 'Pending',
-      requested_by: profile?.id || 'user-system',
-      requested_at: new Date().toISOString(),
-      approved_by: null,
-      approved_at: null,
+      requested_by: profile?.id,
       remarks: formRemarks,
-    };
-    setRequests(prev => [newReq, ...prev]);
+    });
+
+    await supabase.from('activity_logs').insert({
+      user_id: profile?.id,
+      action: 'CREATE',
+      module: 'yarn',
+      description: `Created yarn request for ${formQty} kg of ${formYarn}`
+    });
+
     setShowCreate(false);
     setFormProject('');
     setFormYarn('');
     setFormQty('');
     setFormRemarks('');
+    fetchData();
   };
 
   if (isLoading) {
@@ -207,8 +190,7 @@ export function YarnRequestPage() {
   ];
 
   const selected = selectedId ? requests.find(r => r.id === selectedId) : null;
-  const selectedProject = selected ? DEMO_PROJECTS.find(p => p.id === selected.project_id) : null;
-
+  const selectedProject = selected ? projects.find(p => p.id === selected.project_id) : null;
   // Activity log scoped to yarn requests
   const yarnLogs: ActivityLog[] = DEMO_ACTIVITY_LOGS.filter(l => l.entity_type === 'yarn').slice(0, 6);
 
@@ -274,7 +256,7 @@ export function YarnRequestPage() {
           ) : (
             <div className="divide-y divide-gray-100">
               {filtered.map(r => {
-                const proj = DEMO_PROJECTS.find(p => p.id === r.project_id);
+                const proj = projects.find(p => p.id === r.project_id);
                 const isSelected = selectedId === r.id;
                 return (
                   <button
@@ -287,21 +269,21 @@ export function YarnRequestPage() {
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="text-sm font-semibold text-[#0047ff]">{proj?.project_id || r.project_id}</span>
+                          <span className="text-sm font-semibold text-[#0047ff]">{proj?.order_number || r.project_id}</span>
                           <span className="text-xs text-gray-400">•</span>
                           <span className="text-xs text-gray-600 truncate">{r.yarn_type}</span>
                         </div>
                         <p className="text-xs text-gray-500 mb-1">{proj?.buyers?.company_name} • {proj?.product_name}</p>
                         <div className="flex items-center gap-3 text-sm text-gray-700">
-                          <span className="font-medium">{r.quantity_kg.toLocaleString()} kg</span>
-                          {r.approved_quantity_kg > 0 && r.approved_quantity_kg !== r.quantity_kg && (
+                          <span className="font-medium">{(r.requested_quantity || 0).toLocaleString()} kg</span>
+                          {r.approved_quantity > 0 && r.approved_quantity !== r.requested_quantity && (
                             <span className="text-xs text-gray-500">
-                              (Approved: {r.approved_quantity_kg.toLocaleString()} kg)
+                              (Approved: {(r.approved_quantity || 0).toLocaleString()} kg)
                             </span>
                           )}
-                          {r.issued_quantity_kg > 0 && (
+                          {r.issued_quantity > 0 && (
                             <span className="text-xs text-blue-600">
-                              Issued: {r.issued_quantity_kg.toLocaleString()} kg
+                              Issued: {(r.issued_quantity || 0).toLocaleString()} kg
                             </span>
                           )}
                         </div>
@@ -315,7 +297,7 @@ export function YarnRequestPage() {
                             {r.status}
                           </span>
                           <span className="text-xs text-gray-400">
-                            {new Date(r.requested_at).toLocaleString('en-GB', {
+                            {new Date(r.created_at || new Date()).toLocaleString('en-GB', {
                               day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit'
                             })}
                           </span>
@@ -341,7 +323,7 @@ export function YarnRequestPage() {
                 <div className="space-y-3 text-sm">
                   <div className="flex justify-between">
                     <span className="text-gray-500">Project</span>
-                    <span className="font-medium">{selectedProject?.project_id}</span>
+                    <span className="font-medium">{selectedProject?.order_number}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-500">Yarn Type</span>
@@ -349,24 +331,24 @@ export function YarnRequestPage() {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-500">Requested</span>
-                    <span className="font-medium">{selected.quantity_kg.toLocaleString()} kg</span>
+                    <span className="font-medium">{(selected.requested_quantity || 0).toLocaleString()} kg</span>
                   </div>
-                  {selected.approved_quantity_kg > 0 && (
+                  {(selected.approved_quantity || 0) > 0 && (
                     <div className="flex justify-between">
                       <span className="text-gray-500">Approved</span>
-                      <span className="font-medium text-green-700">{selected.approved_quantity_kg.toLocaleString()} kg</span>
+                      <span className="font-medium text-green-700">{(selected.approved_quantity || 0).toLocaleString()} kg</span>
                     </div>
                   )}
-                  {selected.rejected_quantity_kg > 0 && (
+                  {(selected.rejected_quantity || 0) > 0 && (
                     <div className="flex justify-between">
                       <span className="text-gray-500">Rejected</span>
-                      <span className="font-medium text-red-700">{selected.rejected_quantity_kg.toLocaleString()} kg</span>
+                      <span className="font-medium text-red-700">{(selected.rejected_quantity || 0).toLocaleString()} kg</span>
                     </div>
                   )}
-                  {selected.issued_quantity_kg > 0 && (
+                  {(selected.issued_quantity || 0) > 0 && (
                     <div className="flex justify-between">
                       <span className="text-gray-500">Issued</span>
-                      <span className="font-medium text-blue-700">{selected.issued_quantity_kg.toLocaleString()} kg</span>
+                      <span className="font-medium text-blue-700">{(selected.issued_quantity || 0).toLocaleString()} kg</span>
                     </div>
                   )}
                   <div className="flex justify-between">
@@ -386,7 +368,7 @@ export function YarnRequestPage() {
                     <p className="text-xs font-semibold text-gray-700 mb-2">Yarn Manager Actions</p>
                     <div className="grid grid-cols-3 gap-2">
                       <button
-                        onClick={() => handleApprove(selected.id)}
+                        onClick={() => handleApprove(selected.id, selected)}
                         className="flex items-center justify-center gap-1 px-3 py-2 rounded-lg bg-green-50 text-green-700 hover:bg-green-100 transition-colors text-xs font-medium"
                       >
                         <CheckCircle2 className="w-4 h-4" />
@@ -394,8 +376,8 @@ export function YarnRequestPage() {
                       </button>
                       <button
                         onClick={() => {
-                          const approved = prompt(`Partial approval — approved kg (max ${selected.quantity_kg}):`, String(Math.floor(selected.quantity_kg / 2)));
-                          if (approved) handlePartialApprove(selected.id, parseFloat(approved));
+                          const approved = prompt(`Partial approval — approved kg (max ${selected.requested_quantity}):`, String(Math.floor(selected.requested_quantity / 2)));
+                          if (approved) handlePartialApprove(selected.id, selected, parseFloat(approved));
                         }}
                         className="flex items-center justify-center gap-1 px-3 py-2 rounded-lg bg-purple-50 text-purple-700 hover:bg-purple-100 transition-colors text-xs font-medium"
                       >
@@ -403,7 +385,7 @@ export function YarnRequestPage() {
                         Partial
                       </button>
                       <button
-                        onClick={() => handleReject(selected.id)}
+                        onClick={() => handleReject(selected.id, selected)}
                         className="flex items-center justify-center gap-1 px-3 py-2 rounded-lg bg-red-50 text-red-700 hover:bg-red-100 transition-colors text-xs font-medium"
                       >
                         <XCircle className="w-4 h-4" />
@@ -416,11 +398,11 @@ export function YarnRequestPage() {
                 {(selected.status === 'Approved' || selected.status === 'Partially Approved') && (
                   <div className="mt-4 pt-4 border-t border-gray-100">
                     <button
-                      onClick={() => handleIssue(selected.id)}
+                      onClick={() => handleIssue(selected.id, selected)}
                       className="w-full inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-[#0047ff] text-white hover:bg-blue-700 transition-colors text-xs font-medium"
                     >
                       <ArrowRight className="w-4 h-4" />
-                      Issue {selected.approved_quantity_kg.toLocaleString()} kg (MIN Transaction)
+                      Issue {(selected.approved_quantity || 0).toLocaleString()} kg (MIN Transaction)
                     </button>
                   </div>
                 )}
@@ -428,7 +410,7 @@ export function YarnRequestPage() {
 
               {/* Math validation */}
               <div className={`rounded-xl border p-6 ${
-                selected.approved_quantity_kg + selected.rejected_quantity_kg === selected.quantity_kg || selected.status === 'Pending'
+                (selected.approved_quantity || 0) + (selected.rejected_quantity || 0) === selected.requested_quantity || selected.status === 'Pending'
                   ? 'bg-blue-50 border-blue-200'
                   : 'bg-red-50 border-red-200'
               }`}>
@@ -437,13 +419,13 @@ export function YarnRequestPage() {
                   <h3 className="font-bold text-blue-900">Quantity Validation</h3>
                 </div>
                 <p className="text-sm text-blue-800">
-                  {selected.quantity_kg.toLocaleString()} kg requested
-                  {selected.approved_quantity_kg > 0 && ` • ${selected.approved_quantity_kg.toLocaleString()} kg approved`}
-                  {selected.rejected_quantity_kg > 0 && ` • ${selected.rejected_quantity_kg.toLocaleString()} kg rejected`}
-                  {selected.issued_quantity_kg > 0 && ` • ${selected.issued_quantity_kg.toLocaleString()} kg issued`}
+                  {(selected.requested_quantity || 0).toLocaleString()} kg requested
+                  {(selected.approved_quantity || 0) > 0 && ` • ${(selected.approved_quantity || 0).toLocaleString()} kg approved`}
+                  {(selected.rejected_quantity || 0) > 0 && ` • ${(selected.rejected_quantity || 0).toLocaleString()} kg rejected`}
+                  {(selected.issued_quantity || 0) > 0 && ` • ${(selected.issued_quantity || 0).toLocaleString()} kg issued`}
                 </p>
                 <p className="text-xs text-blue-700 mt-1">
-                  Sum check: {(selected.approved_quantity_kg + selected.rejected_quantity_kg).toLocaleString()} / {selected.quantity_kg.toLocaleString()} kg
+                  Sum check: {((selected.approved_quantity || 0) + (selected.rejected_quantity || 0)).toLocaleString()} / {(selected.requested_quantity || 0).toLocaleString()} kg
                 </p>
               </div>
             </>
@@ -494,8 +476,8 @@ export function YarnRequestPage() {
                   className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-[#0047ff] text-sm"
                 >
                   <option value="">Select project</option>
-                  {DEMO_PROJECTS.map(p => (
-                    <option key={p.id} value={p.id}>{p.project_id} — {p.product_name}</option>
+                  {projects.map(p => (
+                    <option key={p.id} value={p.id}>{p.order_number} — {p.product_name}</option>
                   ))}
                 </select>
               </div>

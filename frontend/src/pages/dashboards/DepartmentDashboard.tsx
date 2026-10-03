@@ -4,11 +4,7 @@ import {
   LayoutDashboard, Package, Clock, CheckCircle2, AlertTriangle,
   ArrowRight, TrendingUp, Loader2, ArrowRightLeft, Activity,
 } from 'lucide-react';
-import {
-  DEMO_PROJECTS,
-  DEMO_DEPARTMENT_RECORDS,
-  DEMO_TRANSFERS,
-} from '@/lib/services/demoData';
+import { supabase } from '@/lib/supabase';
 import { type Department } from '@/lib/services/production';
 
 interface DeptStats {
@@ -38,8 +34,9 @@ export function DepartmentDashboard() {
     pendingTransfersOut: 0,
     avgEfficiency: 0,
   });
-  const [recentRecords, setRecentRecords] = useState<typeof DEMO_DEPARTMENT_RECORDS>([]);
-  const [pendingTransfers, setPendingTransfers] = useState<typeof DEMO_TRANSFERS>([]);
+  const [recentRecords, setRecentRecords] = useState<any[]>([]);
+  const [pendingTransfers, setPendingTransfers] = useState<any[]>([]);
+  const [activeProjectsList, setActiveProjectsList] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -48,34 +45,55 @@ export function DepartmentDashboard() {
       return;
     }
 
-    const records = DEMO_DEPARTMENT_RECORDS.filter(r => r.department === department);
-    const activeProjects = DEMO_PROJECTS.filter(p => p.current_department === department && p.status !== 'Completed' && p.status !== 'Cancelled');
-    const transfersIn = DEMO_TRANSFERS.filter(t => t.to_department === department && t.status === 'Pending');
-    const transfersOut = DEMO_TRANSFERS.filter(t => t.from_department === department && t.status === 'Pending');
+    async function fetchDeptData() {
+      setIsLoading(true);
+      const [
+        { data: allRecords },
+        { data: allProjects },
+        { data: allTransfers }
+      ] = await Promise.all([
+        supabase.from('production_records').select('*, projects(order_number, product_name)').eq('department', department),
+        supabase.from('projects').select('*, buyers(company_name)').neq('status', 'Completed').neq('status', 'Cancelled'),
+        supabase.from('production_transfers').select('*, projects(order_number)').eq('status', 'PENDING')
+      ]);
 
-    const totalReceived = records.reduce((s, r) => s + r.received_quantity, 0);
-    const totalProduced = records.reduce((s, r) => s + r.produced_quantity, 0);
-    const totalRejected = records.reduce((s, r) => s + r.rejected_quantity, 0);
-    const totalDamaged = records.reduce((s, r) => s + r.damaged_quantity, 0);
-    const avgEfficiency = totalProduced > 0
-      ? Math.round(((totalProduced - totalRejected - totalDamaged) / totalProduced) * 100)
-      : 0;
+      const records = allRecords || [];
+      const projects = allProjects || [];
+      const transfers = allTransfers || [];
 
-    setStats({
-      activeProjects: activeProjects.length,
-      totalReceived,
-      totalProduced,
-      totalRejected,
-      totalDamaged,
-      pendingTransfersIn: transfersIn.length,
-      pendingTransfersOut: transfersOut.length,
-      avgEfficiency,
-    });
+      // Filter for active projects that have records in this department
+      const activeProjIds = new Set(records.map(r => r.project_id));
+      const activeProjects = projects.filter(p => activeProjIds.has(p.id));
 
-    setRecentRecords(records.slice(-5).reverse());
-    setPendingTransfers([...transfersIn, ...transfersOut]);
-    setIsLoading(false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+      const transfersIn = transfers.filter(t => t.to_department === department);
+      const transfersOut = transfers.filter(t => t.from_department === department);
+
+      const totalReceived = records.reduce((s, r) => s + (r.input_quantity || 0), 0);
+      const totalProduced = records.reduce((s, r) => s + (r.produced_quantity || 0), 0);
+      const totalRejected = records.reduce((s, r) => s + (r.rejected_quantity || 0), 0);
+      const totalDamaged = records.reduce((s, r) => s + (r.damaged_quantity || 0), 0);
+      const avgEfficiency = totalProduced > 0
+        ? Math.round(((totalProduced - totalRejected - totalDamaged) / totalProduced) * 100)
+        : 0;
+
+      setStats({
+        activeProjects: activeProjects.length,
+        totalReceived,
+        totalProduced,
+        totalRejected,
+        totalDamaged,
+        pendingTransfersIn: transfersIn.length,
+        pendingTransfersOut: transfersOut.length,
+        avgEfficiency,
+      });
+
+      setRecentRecords(records.slice(0, 5));
+      setPendingTransfers([...transfersIn, ...transfersOut].slice(0, 5));
+      setActiveProjectsList(activeProjects);
+      setIsLoading(false);
+    }
+
+    fetchDeptData();
   }, [department]);
 
   if (!department) {
@@ -151,12 +169,10 @@ export function DepartmentDashboard() {
             <p className="text-sm text-gray-500 py-4">No active projects in this department.</p>
           ) : (
             <div className="space-y-3">
-              {DEMO_PROJECTS
-                .filter(p => p.current_department === department && p.status !== 'Completed' && p.status !== 'Cancelled')
-                .map((proj) => {
-                  const record = DEMO_DEPARTMENT_RECORDS.find(r => r.project_id === proj.id && r.department === department);
-                  const pct = record && record.received_quantity > 0
-                    ? Math.round((record.produced_quantity / record.received_quantity) * 100)
+              {activeProjectsList.map((proj) => {
+                  const record = recentRecords.find(r => r.project_id === proj.id);
+                  const pct = record && record.input_quantity > 0
+                    ? Math.round(((record.produced_quantity || 0) / record.input_quantity) * 100)
                     : 0;
                   return (
                     <Link
@@ -166,7 +182,7 @@ export function DepartmentDashboard() {
                     >
                       <div className="flex items-center justify-between mb-2">
                         <div>
-                          <p className="text-sm font-semibold text-[#0047ff]">{proj.project_id}</p>
+                          <p className="text-sm font-semibold text-[#0047ff]">{proj.order_number}</p>
                           <p className="text-xs text-gray-500 mt-0.5">{proj.buyers?.company_name} • {proj.product_name}</p>
                         </div>
                         <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
@@ -216,13 +232,13 @@ export function DepartmentDashboard() {
                       }`}>
                         {isIncoming ? 'Incoming' : 'Outgoing'}
                       </span>
-                      <span className="text-xs text-gray-500">{t.quantity.toLocaleString()} pcs</span>
+                      <span className="text-xs text-gray-500">{t.quantity?.toLocaleString()} pcs</span>
                     </div>
                     <p className="text-sm font-medium text-gray-900 mt-1">
                       {t.from_department} → {t.to_department}
                     </p>
                     <p className="text-xs text-gray-400 mt-0.5">
-                      {new Date(t.requested_at).toLocaleString('en-GB', {
+                      {new Date(t.created_at || new Date()).toLocaleString('en-GB', {
                         day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit'
                       })}
                     </p>
@@ -251,20 +267,19 @@ export function DepartmentDashboard() {
               </thead>
               <tbody className="divide-y divide-gray-50">
                 {recentRecords.map((r) => {
-                  const proj = DEMO_PROJECTS.find(p => p.id === r.project_id);
                   return (
                     <tr key={r.id} className="hover:bg-gray-50/50">
                       <td className="py-2.5 pr-4">
-                        <span className="text-sm font-medium text-[#0047ff]">{proj?.project_id || r.project_id}</span>
+                        <span className="text-sm font-medium text-[#0047ff]">{r.projects?.order_number || r.project_id}</span>
                       </td>
-                      <td className="py-2.5 pr-4 text-gray-700">{r.received_quantity.toLocaleString()}</td>
-                      <td className="py-2.5 pr-4 font-medium text-gray-900">{r.produced_quantity.toLocaleString()}</td>
-                      <td className="py-2.5 pr-4 text-red-600">{r.rejected_quantity.toLocaleString()}</td>
-                      <td className="py-2.5 pr-4 text-amber-600">{r.damaged_quantity.toLocaleString()}</td>
+                      <td className="py-2.5 pr-4 text-gray-700">{(r.input_quantity || 0).toLocaleString()}</td>
+                      <td className="py-2.5 pr-4 font-medium text-gray-900">{(r.produced_quantity || 0).toLocaleString()}</td>
+                      <td className="py-2.5 pr-4 text-red-600">{(r.rejected_quantity || 0).toLocaleString()}</td>
+                      <td className="py-2.5 pr-4 text-amber-600">{(r.damaged_quantity || 0).toLocaleString()}</td>
                       <td className="py-2.5">
                         <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                          r.status === 'Completed' ? 'bg-green-100 text-green-700' :
-                          r.status === 'In Progress' ? 'bg-blue-100 text-blue-700' :
+                          r.status === 'COMPLETED' ? 'bg-green-100 text-green-700' :
+                          r.status === 'IN_PROGRESS' || r.status === 'QC_PENDING' ? 'bg-blue-100 text-blue-700' :
                           'bg-gray-100 text-gray-700'
                         }`}>
                           {r.status}

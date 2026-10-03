@@ -10,6 +10,7 @@ export function InventoryDashboard() {
     pendingRequests: 0,
     activeBatches: 0
   });
+  const [recentFinishedGoods, setRecentFinishedGoods] = useState<any[]>([]);
 
   useEffect(() => {
     async function fetchStats() {
@@ -24,6 +25,13 @@ export function InventoryDashboard() {
         pendingRequests: requestsCount || 0,
         activeBatches: batchesCount || 0,
       });
+
+      const { data: fgData } = await supabase
+        .from('finished_goods_cartons')
+        .select('*, finished_goods(projects(product_name))')
+        .order('received_date', { ascending: false })
+        .limit(3);
+      if (fgData) setRecentFinishedGoods(fgData);
     }
     fetchStats();
   }, []);
@@ -86,24 +94,7 @@ export function InventoryDashboard() {
             </Link>
           </div>
           <div className="space-y-4">
-            <div className="flex items-start justify-between p-3 bg-red-50 rounded-lg border border-red-100">
-               <div className="flex items-center">
-                  <AlertTriangle className="w-5 h-5 text-red-500 mr-3" />
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">Low Stock: Packaging Tape</p>
-                    <p className="text-xs text-red-600 mt-0.5">Current: 50 rolls (Min: 100)</p>
-                  </div>
-               </div>
-            </div>
-            <div className="flex items-start justify-between p-3 bg-yellow-50 rounded-lg border border-yellow-100">
-               <div className="flex items-center">
-                  <AlertTriangle className="w-5 h-5 text-yellow-600 mr-3" />
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">Pending Verification: Chemical A</p>
-                    <p className="text-xs text-yellow-700 mt-0.5">Received 2 days ago.</p>
-                  </div>
-               </div>
-            </div>
+             <div className="text-sm text-gray-500 text-center py-4">No active alerts at this time.</div>
           </div>
         </div>
         
@@ -115,18 +106,24 @@ export function InventoryDashboard() {
             </Link>
           </div>
           <div className="flex flex-col space-y-4">
-             <div className="flex items-start justify-between p-3 bg-gray-50 rounded-lg border border-gray-100">
-               <div className="flex items-center">
-                 <PackageCheck className="w-5 h-5 text-gray-400 mr-3" />
-                 <div>
-                    <p className="text-sm font-medium text-gray-900">Carton #10042 (PRJ-T-SHIRT-01)</p>
-                    <p className="text-xs text-gray-500 mt-0.5">Received today</p>
+             {recentFinishedGoods.length === 0 ? (
+               <div className="text-sm text-gray-500 text-center py-4">No recent finished goods.</div>
+             ) : (
+               recentFinishedGoods.map((fg: any) => (
+                 <div key={fg.id} className="flex items-start justify-between p-3 bg-gray-50 rounded-lg border border-gray-100">
+                   <div className="flex items-center">
+                     <PackageCheck className="w-5 h-5 text-gray-400 mr-3" />
+                     <div>
+                        <p className="text-sm font-medium text-gray-900">Carton #{fg.carton_number}</p>
+                        <p className="text-xs text-gray-500 mt-0.5">{fg.finished_goods?.projects?.product_name || 'Unknown Project'}</p>
+                     </div>
+                   </div>
+                   <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize bg-blue-100 text-blue-800">
+                     {fg.shipment_status}
+                   </span>
                  </div>
-               </div>
-               <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize bg-blue-100 text-blue-800">
-                 Stored
-               </span>
-            </div>
+               ))
+             )}
           </div>
         </div>
       </div>

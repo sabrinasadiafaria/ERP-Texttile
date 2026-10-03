@@ -18,7 +18,7 @@ import { PendingApproval } from '@/pages/auth/PendingApproval';
 // Dashboard Components
 import { ProtectedRoute } from '@/components/layout/ProtectedRoute';
 import { RoleProtectedRoute } from '@/components/layout/RoleProtectedRoute';
-import { getRolePath, PRODUCTION_ROLES } from '@/lib/roles';
+import { getRolePath, PRODUCTION_DEPARTMENTS } from '@/lib/roles';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { DashboardRedirect } from '@/pages/dashboards/DashboardRedirect';
 import { DirectorDashboard } from '@/pages/dashboards/DirectorDashboard';
@@ -63,31 +63,9 @@ import { FinishedGoods } from '@/pages/inventory-manager/FinishedGoods';
 import { InventoryReports } from '@/pages/inventory-manager/InventoryReports';
 
 // Admin Pages
-import { AdminDashboard } from '@/pages/admin/AdminDashboard';
 import { UserManagement } from '@/pages/admin/UserManagement';
 import { ActivityLogs } from '@/pages/admin/ActivityLogs';
 
-const ROLES = [
-  'Director',
-  'Admin',
-  'Merchandiser',
-  'Yarn Manager',
-  'Inventory & Store Manager',
-  'Knitting PM',
-  'Knitting APM',
-  'Linking PM',
-  'Linking APM',
-  'Cutting & Trimming PM',
-  'Cutting & Trimming APM',
-  'Sewing PM',
-  'Sewing APM',
-  'Washing PM',
-  'Washing APM',
-  'Ironing PM',
-  'Ironing APM',
-  'Packaging PM',
-  'Packaging APM'
-];
 export const router = createBrowserRouter([
   {
     path: '/',
@@ -118,18 +96,16 @@ export const router = createBrowserRouter([
           {
             path: 'director',
             element: (
-              <RoleProtectedRoute allowedRoles={['Director']}>
+              <RoleProtectedRoute allowedRoles={['Director']} module="dashboard">
                 <Outlet />
               </RoleProtectedRoute>
             ),
-            children: [
-              { index: true, element: <DirectorDashboard /> },
-            ],
+            children: [{ index: true, element: <DirectorDashboard /> }],
           },
           {
             path: 'admin',
             element: (
-              <RoleProtectedRoute allowedRoles={['Admin']}>
+              <RoleProtectedRoute module="users" action="manage">
                 <Outlet />
               </RoleProtectedRoute>
             ),
@@ -142,15 +118,14 @@ export const router = createBrowserRouter([
           {
             path: 'merchandiser',
             element: (
-              <RoleProtectedRoute allowedRoles={['Director', 'Admin', 'Merchandiser']}>
+              <RoleProtectedRoute module="projects" action="view">
                 <Outlet />
               </RoleProtectedRoute>
             ),
             children: [
               { index: true, element: <MerchandiserDashboard /> },
               { path: 'buyers', element: <BuyersList /> },
-              { path: 'buyers/new', element: <BuyerForm /> },
-
+              { path: 'buyers/new', element: <RoleProtectedRoute module="buyers" action="create"><BuyerForm /></RoleProtectedRoute> },
               { path: 'boms', element: <BOMsList /> },
               { path: 'pos', element: <PurchaseOrdersList /> },
               { path: 'reports', element: <MerchandiserReports /> },
@@ -159,13 +134,13 @@ export const router = createBrowserRouter([
           {
             path: 'yarn-manager',
             element: (
-              <RoleProtectedRoute allowedRoles={['Director', 'Admin', 'Yarn Manager']}>
+              <RoleProtectedRoute module="yarn" action="view">
                 <Outlet />
               </RoleProtectedRoute>
             ),
             children: [
               { index: true, element: <YarnManagerDashboard /> },
-              { path: 'suppliers', element: <SuppliersLayout />, children: [
+              { path: 'suppliers', element: <RoleProtectedRoute module="suppliers" action="view"><SuppliersLayout /></RoleProtectedRoute>, children: [
                 { index: true, element: <SuppliersList /> },
                 { path: 'new', element: <SupplierForm /> },
               ]},
@@ -179,7 +154,7 @@ export const router = createBrowserRouter([
           {
             path: 'inventory-manager',
             element: (
-              <RoleProtectedRoute allowedRoles={['Director', 'Admin', 'Inventory & Store Manager']}>
+              <RoleProtectedRoute module="inventory" action="view">
                 <Outlet />
               </RoleProtectedRoute>
             ),
@@ -195,45 +170,44 @@ export const router = createBrowserRouter([
               { path: 'reports', element: <InventoryReports /> },
             ],
           },
-          // Generate dynamic routes for production roles
-          ...PRODUCTION_ROLES.map((role) => {
-            const rolePath = getRolePath(role);
-            return {
-              path: rolePath,
+          // One route per production role, generated from the department config.
+          // A role may only open ITS OWN department (module = department key).
+          ...PRODUCTION_DEPARTMENTS.flatMap((d) =>
+            [d.pmRole, d.apmRole].map((role) => ({
+              path: getRolePath(role),
               element: (
-                <RoleProtectedRoute allowedRoles={[role]}>
+                <RoleProtectedRoute allowedRoles={[role]} module={d.department} action="view">
                   <DepartmentDashboard />
                 </RoleProtectedRoute>
               ),
-            };
-          }),
+            }))
+          ),
           {
             path: 'projects',
             element: (
-              <RoleProtectedRoute allowedRoles={['Director', 'Admin', 'Merchandiser', 'Knitting PM', 'Knitting APM', 'Linking PM', 'Linking APM', 'Cutting & Trimming PM', 'Cutting & Trimming APM', 'Production PM', 'Production APM']}>
+              <RoleProtectedRoute module="projects" action="view">
                 <Outlet />
               </RoleProtectedRoute>
             ),
             children: [
               { index: true, element: <ProjectsList /> },
-              { path: 'new', element: <ProjectWizard /> },
+              { path: 'new', element: <RoleProtectedRoute module="projects" action="create"><ProjectWizard /></RoleProtectedRoute> },
               { path: ':id', element: <ProjectDetails /> },
-              { path: ':id/bom', element: <BOMBuilder /> },
-            ]
+              { path: ':id/bom', element: <RoleProtectedRoute module="bom" action="view"><BOMBuilder /></RoleProtectedRoute> },
+            ],
           },
           {
             path: 'kpos',
             element: (
-              <RoleProtectedRoute allowedRoles={['Director', 'Admin', 'Knitting PM', 'Knitting APM', 'Production PM', 'Production APM']}>
+              <RoleProtectedRoute module="knitting" action="view">
                 <KPOGeneration />
               </RoleProtectedRoute>
             ),
           },
-
           {
             path: 'transfers',
             element: (
-              <RoleProtectedRoute allowedRoles={['Director', 'Admin', 'Merchandiser', 'Yarn Manager', 'Inventory & Store Manager', 'Knitting PM', 'Knitting APM', 'Linking PM', 'Linking APM', 'Cutting & Trimming PM', 'Cutting & Trimming APM', 'Production PM', 'Production APM']}>
+              <RoleProtectedRoute module="transfers" action="view">
                 <TransfersPage />
               </RoleProtectedRoute>
             ),
@@ -241,7 +215,7 @@ export const router = createBrowserRouter([
           {
             path: 'yarn-requests',
             element: (
-              <RoleProtectedRoute allowedRoles={['Director', 'Admin', 'Merchandiser', 'Yarn Manager', 'Production PM', 'Production APM']}>
+              <RoleProtectedRoute module="yarn_requests" action="view">
                 <YarnRequestPage />
               </RoleProtectedRoute>
             ),
@@ -249,7 +223,7 @@ export const router = createBrowserRouter([
           {
             path: 'activity-log',
             element: (
-              <RoleProtectedRoute allowedRoles={['Director', 'Admin', 'Merchandiser', 'Yarn Manager', 'Inventory & Store Manager', 'Knitting PM', 'Knitting APM', 'Linking PM', 'Linking APM', 'Cutting & Trimming PM', 'Cutting & Trimming APM', 'Production PM', 'Production APM']}>
+              <RoleProtectedRoute module="activity" action="view">
                 <ActivityLogPage />
               </RoleProtectedRoute>
             ),
@@ -257,13 +231,13 @@ export const router = createBrowserRouter([
           {
             path: 'settings',
             element: (
-              <RoleProtectedRoute allowedRoles={['Director', 'Admin']}>
+              <RoleProtectedRoute module="settings" action="manage">
                 <SettingsPage />
               </RoleProtectedRoute>
             ),
           },
         ],
-      }
+      },
     ],
   },
 ]);

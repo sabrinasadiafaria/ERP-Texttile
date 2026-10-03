@@ -2,8 +2,9 @@ import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Loader2 } from 'lucide-react';
 
+/** Gate for the whole ERP: requires a real session AND an approved (active) profile with a role. */
 export function ProtectedRoute() {
-  const { session, profile, isLoading } = useAuth();
+  const { session, profile, isApproved, isLoading } = useAuth();
   const location = useLocation();
 
   if (isLoading) {
@@ -14,13 +15,12 @@ export function ProtectedRoute() {
     );
   }
 
-  // Demo mode: no Supabase auth session, but profile may exist from local storage.
-  // Allow through so we can test role-based nav.
-  if (!session && !profile) {
+  if (!session) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  if (profile?.status === 'pending') {
+  // pending / rejected / inactive / role-less users never reach the ERP
+  if (!profile || !isApproved) {
     return <Navigate to="/pending-approval" replace />;
   }
 

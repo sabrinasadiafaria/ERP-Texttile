@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
-import { getRolePath } from '@/lib/roles';
+import { getRolePath, getDepartmentForRole } from '@/lib/roles';
+import { fetchNotifications, markNotificationRead, type Notification } from '@/lib/services/production';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import {
@@ -15,7 +16,6 @@ import {
   FolderKanban,
   FileText,
   ShoppingCart,
-  BarChart3,
   Warehouse,
   ClipboardCheck,
   Box,
@@ -39,13 +39,27 @@ import {
 // ============================================================================
 // LAYOUT COMPONENT
 // ============================================================================
-
 export function DashboardLayout() {
-  const { profile, signOut, session, setDemoRole, demoRoles, permissions } = useAuth();
+  const { profile, signOut, can } = useAuth();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
-  const [hasUnread, setHasUnread] = useState(true);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const hasUnread = notifications.some((n) => !n.is_read);
+
+  useEffect(() => {
+    if (!profile?.id) return;
+    let alive = true;
+    const load = () => fetchNotifications(profile.id).then((n) => { if (alive) setNotifications(n); });
+    load();
+    const t = setInterval(load, 30000);
+    return () => { alive = false; clearInterval(t); };
+  }, [profile?.id]);
+
+  const markAllRead = async () => {
+    await Promise.all(notifications.filter((n) => !n.is_read).map((n) => markNotificationRead(n.id)));
+    setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
+  };
   const profileRef = useRef<HTMLDivElement>(null);
   const notifRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
@@ -81,51 +95,40 @@ export function DashboardLayout() {
 
   const roleSlug = profile?.role ? getRolePath(profile.role) : '';
 
-  // DYNAMIC NAVIGATION BUILDER based on Supabase role_permissions
-  const nav = [];
-  if (profile?.role && permissions) {
-    if (permissions.dashboard) {
-      nav.push({ name: 'Dashboard', path: `/dashboard/${roleSlug}`, icon: LayoutDashboard });
-    }
-    if (permissions.projects && permissions.projects !== 'none') {
-      nav.push({ name: 'Buyers', path: '/dashboard/merchandiser/buyers', icon: Users });
-      nav.push({ name: 'Projects', path: '/dashboard/projects', icon: FolderKanban });
-      nav.push({ name: 'BOMs', path: '/dashboard/merchandiser/boms', icon: FileText });
-      nav.push({ name: 'Purchase Orders', path: '/dashboard/merchandiser/pos', icon: ShoppingCart });
-    }
-    if (permissions.yarn && permissions.yarn !== 'none') {
-      nav.push({ name: 'Suppliers', path: '/dashboard/yarn-manager/suppliers', icon: Truck });
-      nav.push({ name: 'PO Queue', path: '/dashboard/yarn-manager/purchase-orders', icon: ShoppingCart });
+  // SIDEBAR driven purely by the RBAC matrix (rbac_permissions) via can()
+  const nav: { name: string; path: string; icon: React.ElementType }[] = [];
+  if (profile?.role) {
+    const dept = getDepartmentForRole(profile.role);
+    if (can('dashboard', 'view')) nav.push({ name: 'Dashboard', path: `/dashboard/${roleSlug}`, icon: LayoutDashboard });
+    if (can('projects', 'view')) nav.push({ name: 'Projects', path: '/dashboard/projects', icon: FolderKanban });
+    if (can('buyers', 'view')) nav.push({ name: 'Buyers', path: '/dashboard/merchandiser/buyers', icon: Users });
+    if (can('bom', 'view')) nav.push({ name: 'BOMs', path: '/dashboard/merchandiser/boms', icon: FileText });
+    if (can('yarn_requests', 'view')) nav.push({ name: 'Yarn Requests', path: '/dashboard/yarn-requests', icon: Box });
+    if (can('suppliers', 'view')) nav.push({ name: 'Suppliers', path: '/dashboard/yarn-manager/suppliers', icon: Truck });
+    if (can('purchase_orders', 'view')) nav.push({ name: 'Purchase Orders', path: '/dashboard/yarn-manager/purchase-orders', icon: ShoppingCart });
+    if (can('yarn', 'view')) {
       nav.push({ name: 'Yarn Master', path: '/dashboard/yarn-manager/yarn-master', icon: FileText });
-      nav.push({ name: 'Receipts & QA', path: '/dashboard/yarn-manager/receipts', icon: ClipboardCheck });
+      nav.push({ name: 'Yarn Receipts', path: '/dashboard/yarn-manager/receipts', icon: ClipboardCheck });
+      nav.push({ name: 'Yarn Inventory', path: '/dashboard/yarn-manager/inventory', icon: Warehouse });
       nav.push({ name: 'Reservations', path: '/dashboard/yarn-manager/reservations', icon: Box });
     }
-    if (permissions.inventory && permissions.inventory !== 'none') {
+    if (can('material', 'view')) {
       nav.push({ name: 'Receiving', path: '/dashboard/inventory-manager/receiving', icon: PackageOpen });
       nav.push({ name: 'Verification', path: '/dashboard/inventory-manager/verification', icon: CheckSquare });
-      nav.push({ name: 'Warehouse', path: '/dashboard/inventory-manager/warehouse', icon: Warehouse });
       nav.push({ name: 'Material Requests', path: '/dashboard/inventory-manager/requests', icon: FileOutput });
       nav.push({ name: 'Material Issues', path: '/dashboard/inventory-manager/issues', icon: ArrowLeftRight });
+    }
+    if (can('inventory', 'view')) {
+      nav.push({ name: 'Warehouse', path: '/dashboard/inventory-manager/warehouse', icon: Warehouse });
       nav.push({ name: 'Returns & Adj', path: '/dashboard/inventory-manager/exceptions', icon: AlertTriangle });
-      nav.push({ name: 'Finished Goods', path: '/dashboard/inventory-manager/finished-goods', icon: PackageCheck });
     }
-    if (permissions.production && permissions.production !== 'none') {
-      nav.push({ name: 'Production Workflow', path: `/dashboard/${roleSlug}`, icon: Factory });
-      nav.push({ name: 'KPO Generation', path: '/dashboard/kpos', icon: Factory });
-      nav.push({ name: 'Transfers', path: '/dashboard/transfers', icon: ArrowRightLeft });
-    }
-    if (permissions.reports && permissions.reports !== 'none') {
-      nav.push({ name: 'Reports', path: '/dashboard/merchandiser/reports', icon: BarChart3 });
-    }
-    if (permissions.admin && permissions.admin !== 'none') {
-      nav.push({ name: 'System Users', path: '/dashboard/admin/users', icon: UserCog });
-      nav.push({ name: 'Departments', path: '/dashboard/admin/departments', icon: Building });
-      nav.push({ name: 'Activity Log', path: '/dashboard/activity-log', icon: Activity });
-    }
-    nav.push({ name: 'Settings', path: '/dashboard/settings', icon: Settings });
-  } else if (profile?.role) {
-    // Fallback if permissions haven't loaded yet
-    nav.push({ name: 'Overview', path: `/dashboard/${roleSlug}`, icon: LayoutDashboard });
+    if (can('finished_goods', 'view')) nav.push({ name: 'Finished Goods', path: '/dashboard/inventory-manager/finished-goods', icon: PackageCheck });
+    if (dept && can(dept.department, 'view')) nav.push({ name: `${dept.displayName} Work`, path: `/dashboard/${roleSlug}`, icon: Factory });
+    if (can('transfers', 'view')) nav.push({ name: 'Transfers', path: '/dashboard/transfers', icon: ArrowRightLeft });
+    if (can('users', 'manage')) nav.push({ name: 'Users', path: '/dashboard/admin/users', icon: UserCog });
+    if (can('roles', 'manage')) nav.push({ name: 'Permissions', path: '/dashboard/admin/permissions', icon: Building });
+    if (can('activity', 'view')) nav.push({ name: 'Activity Log', path: '/dashboard/activity-log', icon: Activity });
+    if (can('settings', 'manage')) nav.push({ name: 'Settings', path: '/dashboard/settings', icon: Settings });
   }
 
   return (
@@ -185,25 +188,6 @@ export function DashboardLayout() {
         </div>
 
         <div className="p-4 border-t border-white/10">
-          {!session && (
-            <div className="mb-3">
-              <label className="block text-[10px] uppercase tracking-wider text-gray-400 mb-1.5 px-2">
-                Demo Role
-              </label>
-              <select
-                value={profile?.role || ''}
-                onChange={(e) => {
-                  setDemoRole(e.target.value);
-                  window.location.href = '/dashboard';
-                }}
-                className="w-full bg-white/10 border border-white/10 text-white text-xs rounded-md px-2 py-1.5 focus:outline-none focus:border-[#0047ff]"
-              >
-                {demoRoles.map((r) => (
-                  <option key={r} value={r} className="text-black">{r}</option>
-                ))}
-              </select>
-            </div>
-          )}
           <div className="flex items-center mb-4 px-2">
             <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center mr-3">
               <UserIcon className="w-4 h-4 text-gray-300" />
@@ -255,7 +239,6 @@ export function DashboardLayout() {
               <button 
                 onClick={() => {
                   setIsNotificationsOpen(!isNotificationsOpen);
-                  if (hasUnread) setHasUnread(false);
                   setIsProfileOpen(false);
                 }}
                 className="p-2 text-gray-400 hover:text-black relative transition-colors rounded-full hover:bg-gray-100"
@@ -270,23 +253,27 @@ export function DashboardLayout() {
                     <h3 className="text-sm font-semibold text-gray-900">Notifications</h3>
                   </div>
                   <div className="max-h-80 overflow-y-auto">
-                    {[
-                      { title: 'New Transfer Request', time: '10m ago', unread: true },
-                      { title: 'Project 1004 is delayed', time: '1h ago', unread: true },
-                      { title: 'Low Yarn Stock: Superfine Merino', time: '3h ago', unread: false },
-                      { title: 'System maintenance scheduled', time: '1d ago', unread: false },
-                    ].map((n, i) => (
-                      <div key={i} className={`px-4 py-3 border-b border-gray-50 hover:bg-gray-50 cursor-pointer ${n.unread ? 'bg-blue-50/20' : ''}`}>
+                    {notifications.length === 0 && (
+                      <p className="px-4 py-6 text-sm text-gray-500 text-center">No notifications</p>
+                    )}
+                    {notifications.map((n) => (
+                      <Link
+                        key={n.id}
+                        to={n.link || '/dashboard'}
+                        onClick={() => { markNotificationRead(n.id); setIsNotificationsOpen(false); }}
+                        className={`block px-4 py-3 border-b border-gray-50 hover:bg-gray-50 ${!n.is_read ? 'bg-blue-50/20' : ''}`}
+                      >
                         <div className="flex justify-between items-start">
-                          <p className={`text-sm ${n.unread ? 'font-medium text-gray-900' : 'text-gray-700'}`}>{n.title}</p>
-                          {n.unread && <span className="w-2 h-2 bg-[#0047ff] rounded-full mt-1.5"></span>}
+                          <p className={`text-sm ${!n.is_read ? 'font-medium text-gray-900' : 'text-gray-700'}`}>{n.title}</p>
+                          {!n.is_read && <span className="w-2 h-2 bg-[#0047ff] rounded-full mt-1.5"></span>}
                         </div>
-                        <p className="text-xs text-gray-500 mt-1">{n.time}</p>
-                      </div>
+                        <p className="text-xs text-gray-500 mt-1">{n.message}</p>
+                        <p className="text-[10px] text-gray-400 mt-1">{new Date(n.created_at).toLocaleString()}</p>
+                      </Link>
                     ))}
                   </div>
                   <div className="px-4 py-2 border-t border-gray-100 bg-gray-50/50 text-center">
-                    <button className="text-xs font-medium text-[#0047ff] hover:underline">
+                    <button onClick={markAllRead} className="text-xs font-medium text-[#0047ff] hover:underline">
                       Mark all as read
                     </button>
                   </div>

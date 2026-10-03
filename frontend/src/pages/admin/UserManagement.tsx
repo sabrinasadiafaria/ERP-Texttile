@@ -1,158 +1,203 @@
-import React, { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
-import { Check, X, Shield, Search, Loader2 } from 'lucide-react';
-import { Button } from '@/components/ui/Button';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Check, X, Search, Loader2, Power, Pencil, Save } from 'lucide-react';
+import { useAuth, type UserProfile, type UserStatus } from '@/contexts/AuthContext';
+import { ALL_ROLES, getDepartmentForRole, PRODUCTION_DEPARTMENTS } from '@/lib/roles';
+import { listUsers, setUser, updateProfileDetails } from '@/lib/services/userAdmin';
+
+const DEPARTMENT_OPTIONS = [
+  'Management', 'Administration', 'Commercial', 'Yarn', 'Inventory & Store',
+  ...PRODUCTION_DEPARTMENTS.map((d) => d.displayName),
+];
+
+const STATUS_STYLE: Record<UserStatus, string> = {
+  pending: 'bg-orange-100 text-orange-800',
+  active: 'bg-green-100 text-green-800',
+  rejected: 'bg-red-100 text-red-800',
+  inactive: 'bg-gray-200 text-gray-700',
+};
+
+type Tab = 'pending' | 'all';
 
 export function UserManagement() {
-  const [users, setUsers] = useState<any[]>([]);
+  const { can, profile: me } = useAuth();
+  const canManage = can('users', 'manage');
+  const [users, setUsers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [busy, setBusy] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [search, setSearch] = useState('');
+  const [tab, setTab] = useState<Tab>('pending');
+  // per-row draft for role/department chosen before approving
+  const [draft, setDraft] = useState<Record<string, { role?: string; department?: string; name?: string }>>({});
+  const [editing, setEditing] = useState<string | null>(null);
 
-  const ROLES = [
-    'Director', 'Admin', 'Merchandiser', 'Yarn Manager', 'Inventory & Store Manager',
-    'Knitting PM', 'Knitting APM', 'Linking PM', 'Linking APM',
-    'Cutting & Trimming PM', 'Cutting & Trimming APM',
-    'Sewing PM', 'Sewing APM', 'Washing PM', 'Washing APM',
-    'Ironing PM', 'Ironing APM', 'Packaging PM', 'Packaging APM'
-  ];
-
-  useEffect(() => {
-    fetchUsers();
-  }, []);
-
-  const fetchUsers = async () => {
+  const load = useCallback(async () => {
     setLoading(true);
-    const { data, error } = await supabase.from('profiles').select('*').order('created_at', { ascending: false });
-    if (!error && data) {
-      setUsers(data);
-    }
+    try { setUsers(await listUsers()); setError(null); }
+    catch (e) { setError((e as Error).message); }
     setLoading(false);
+  }, []);
+  useEffect(() => { load(); }, [load]);
+
+  const run = async (id: string, fn: () => Promise<void>) => {
+    setBusy(id); setError(null);
+    try { await fn(); await load(); }
+    catch (e) { setError((e as Error).message); }
+    setBusy(null);
   };
 
-  const handleUpdateStatus = async (userId: string, newStatus: string) => {
-    const { error } = await supabase.from('profiles').update({ status: newStatus }).eq('id', userId);
-    if (!error) {
-      setUsers(users.map(u => u.id === userId ? { ...u, status: newStatus } : u));
-    }
+  const setDraftField = (id: string, patch: { role?: string; department?: string; name?: string }) =>
+    setDraft((d) => ({ ...d, [id]: { ...d[id], ...patch } }));
+
+  const onRoleChange = (u: UserProfile, role: string) => {
+    // default the department from the role (e.g. Knitting PM -> Knitting)
+    const dept = getDepartmentForRole(role)?.displayName;
+    setDraftField(u.id, { role, ...(dept && !u.department ? { department: dept } : {}) });
   };
 
-  const handleUpdateRole = async (userId: string, newRole: string) => {
-    const { error } = await supabase.from('profiles').update({ role: newRole }).eq('id', userId);
-    if (!error) {
-      setUsers(users.map(u => u.id === userId ? { ...u, role: newRole } : u));
-    }
-  };
-  
-  const handleUpdateDepartment = async (userId: string, newDept: string) => {
-    const { error } = await supabase.from('profiles').update({ department: newDept }).eq('id', userId);
-    if (!error) {
-      setUsers(users.map(u => u.id === userId ? { ...u, department: newDept } : u));
-    }
+  const approve = (u: UserProfile) => {
+    const d = draft[u.id] ?? {};
+    const role = d.role ?? u.role;
+    const department = d.department ?? u.department;
+    if (!role) { setError('Assign a role before approving.'); return; }
+    if (!department) { setError('Assign a department before approving.'); return; }
+    run(u.id, () => setUser({ userId: u.id, status: 'active', role, department }));
   };
 
-  const filteredUsers = users.filter(u => 
-    u.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    u.email?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const reject = (u: UserProfile) => {
+    const reason = window.prompt('Reason for rejection (required):');
+    if (!reason) return;
+    run(u.id, () => setUser({ userId: u.id, status: 'rejected', reason }));
+  };
+
+  const saveEdit = (u: UserProfile) => {
+    const d = draft[u.id] ?? {};
+    run(u.id, async () => {
+      if (d.name !== undefined && d.name !== u.full_name) await updateProfileDetails(u.id, { full_name: d.name });
+      if ((d.role && d.role !== u.role) || (d.department && d.department !== u.department)) {
+        await setUser({ userId: u.id, status: u.status, role: d.role ?? u.role, department: d.department ?? u.department });
+      }
+      setEditing(null);
+    });
+  };
+
+  const visible = useMemo(() => {
+    const q = search.toLowerCase();
+    return users
+      .filter((u) => (tab === 'pending' ? u.status === 'pending' : true))
+      .filter((u) => !q || u.full_name?.toLowerCase().includes(q) || u.email?.toLowerCase().includes(q) || u.role?.toLowerCase().includes(q));
+  }, [users, tab, search]);
+
+  const pendingCount = users.filter((u) => u.status === 'pending').length;
+
+  if (!canManage) return <p className="text-sm text-gray-500">You do not have permission to manage users.</p>;
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">User Management</h1>
-          <p className="text-gray-500">Approve users and assign roles</p>
+          <p className="text-gray-500">
+            New users register on the Sign Up page and appear here as Pending. Approve to assign role and department.
+          </p>
         </div>
         <div className="relative w-full sm:w-64">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Search className="h-4 w-4 text-gray-400" />
-          </div>
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
           <input
-            type="text"
-            className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-[#0047ff] focus:border-[#0047ff]"
-            placeholder="Search users..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg text-sm"
+            placeholder="Search name, email, role..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
           />
         </div>
       </div>
 
+      <div className="flex gap-2">
+        <button onClick={() => setTab('pending')} className={`px-4 py-2 rounded-lg text-sm font-medium ${tab === 'pending' ? 'bg-[#0047ff] text-white' : 'bg-white border text-gray-700'}`}>
+          Pending Users ({pendingCount})
+        </button>
+        <button onClick={() => setTab('all')} className={`px-4 py-2 rounded-lg text-sm font-medium ${tab === 'all' ? 'bg-[#0047ff] text-white' : 'bg-white border text-gray-700'}`}>
+          All Users ({users.length})
+        </button>
+      </div>
+
+      {error && <div className="p-3 rounded-lg bg-red-50 border border-red-100 text-red-600 text-sm">{error}</div>}
+
       <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
         {loading ? (
           <div className="p-8 flex justify-center"><Loader2 className="w-8 h-8 animate-spin text-[#0047ff]" /></div>
+        ) : visible.length === 0 ? (
+          <p className="p-8 text-center text-sm text-gray-500">{tab === 'pending' ? 'No users awaiting approval.' : 'No users found.'}</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Department</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                  {['User', 'Status', 'Role', 'Department', 'Actions'].map((h) => (
+                    <th key={h} className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{h}</th>
+                  ))}
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {filteredUsers.map((user) => (
-                  <tr key={user.id}>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center text-[#0047ff] font-bold">
-                          {user.full_name?.charAt(0) || user.email.charAt(0)}
+              <tbody className="divide-y divide-gray-200">
+                {visible.map((u) => {
+                  const d = draft[u.id] ?? {};
+                  const isEditing = editing === u.id || u.status === 'pending';
+                  const isMe = u.id === me?.id;
+                  return (
+                    <tr key={u.id}>
+                      <td className="px-4 py-3">
+                        {editing === u.id ? (
+                          <input className="border rounded px-2 py-1 text-sm" defaultValue={u.full_name ?? ''} onChange={(e) => setDraftField(u.id, { name: e.target.value })} />
+                        ) : (
+                          <div className="text-sm font-medium text-gray-900">{u.full_name || 'No Name'}</div>
+                        )}
+                        <div className="text-xs text-gray-500">{u.email}</div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${STATUS_STYLE[u.status]}`}>{u.status}</span>
+                        {u.status === 'rejected' && u.rejection_reason && <div className="text-xs text-red-500 mt-1">{u.rejection_reason}</div>}
+                      </td>
+                      <td className="px-4 py-3 text-sm">
+                        {isEditing ? (
+                          <select value={d.role ?? u.role ?? ''} onChange={(e) => onRoleChange(u, e.target.value)} className="border rounded px-2 py-1 text-sm">
+                            <option value="">Select role</option>
+                            {ALL_ROLES.map((r) => <option key={r} value={r}>{r}</option>)}
+                          </select>
+                        ) : (u.role ?? '—')}
+                      </td>
+                      <td className="px-4 py-3 text-sm">
+                        {isEditing ? (
+                          <select value={d.department ?? u.department ?? ''} onChange={(e) => setDraftField(u.id, { department: e.target.value })} className="border rounded px-2 py-1 text-sm">
+                            <option value="">Select department</option>
+                            {DEPARTMENT_OPTIONS.map((x) => <option key={x} value={x}>{x}</option>)}
+                          </select>
+                        ) : (u.department ?? '—')}
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex gap-2 items-center">
+                          {busy === u.id && <Loader2 className="w-4 h-4 animate-spin" />}
+                          {(u.status === 'pending' || u.status === 'rejected') && (
+                            <button title="Approve" disabled={busy === u.id} onClick={() => approve(u)} className="text-emerald-700 bg-emerald-50 p-2 rounded-lg"><Check className="w-4 h-4" /></button>
+                          )}
+                          {u.status === 'pending' && (
+                            <button title="Reject" disabled={busy === u.id} onClick={() => reject(u)} className="text-red-600 bg-red-50 p-2 rounded-lg"><X className="w-4 h-4" /></button>
+                          )}
+                          {u.status === 'active' && !isMe && (
+                            <button title="Deactivate" disabled={busy === u.id} onClick={() => run(u.id, () => setUser({ userId: u.id, status: 'inactive' }))} className="text-gray-700 bg-gray-100 p-2 rounded-lg"><Power className="w-4 h-4" /></button>
+                          )}
+                          {u.status === 'inactive' && (
+                            <button title="Activate" disabled={busy === u.id} onClick={() => run(u.id, () => setUser({ userId: u.id, status: 'active' }))} className="text-emerald-700 bg-emerald-50 p-2 rounded-lg"><Power className="w-4 h-4" /></button>
+                          )}
+                          {u.status !== 'pending' && (editing === u.id ? (
+                            <button title="Save" onClick={() => saveEdit(u)} className="text-[#0047ff] bg-blue-50 p-2 rounded-lg"><Save className="w-4 h-4" /></button>
+                          ) : (
+                            <button title="Edit user" onClick={() => setEditing(u.id)} className="text-gray-700 bg-gray-100 p-2 rounded-lg"><Pencil className="w-4 h-4" /></button>
+                          ))}
                         </div>
-                        <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">{user.full_name || 'No Name'}</div>
-                          <div className="text-sm text-gray-500">{user.email}</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                        user.status === 'approved' ? 'bg-green-100 text-green-800' : 
-                        user.status === 'pending' ? 'bg-orange-100 text-orange-800' : 
-                        'bg-red-100 text-red-800'
-                      }`}>
-                        {user.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      <select 
-                        value={user.role || ''} 
-                        onChange={(e) => handleUpdateRole(user.id, e.target.value)}
-                        className="mt-1 block w-full pl-3 pr-10 py-1 text-base border-gray-300 focus:outline-none focus:ring-[#0047ff] focus:border-[#0047ff] sm:text-sm rounded-md"
-                      >
-                        <option value="">Select Role</option>
-                        {ROLES.map(role => (
-                          <option key={role} value={role}>{role}</option>
-                        ))}
-                      </select>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      <input 
-                        type="text" 
-                        value={user.department || ''} 
-                        onChange={(e) => handleUpdateDepartment(user.id, e.target.value)}
-                        placeholder="e.g. Knitting"
-                        className="mt-1 focus:ring-[#0047ff] focus:border-[#0047ff] block w-full shadow-sm sm:text-sm border-gray-300 rounded-md py-1 px-2 border"
-                      />
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      {user.status === 'pending' ? (
-                        <div className="flex justify-end space-x-2">
-                          <button onClick={() => handleUpdateStatus(user.id, 'approved')} className="text-emerald-600 hover:text-emerald-900 bg-emerald-50 p-2 rounded-lg">
-                            <Check className="w-4 h-4" />
-                          </button>
-                          <button onClick={() => handleUpdateStatus(user.id, 'rejected')} className="text-red-600 hover:text-red-900 bg-red-50 p-2 rounded-lg">
-                            <X className="w-4 h-4" />
-                          </button>
-                        </div>
-                      ) : (
-                        <button onClick={() => handleUpdateStatus(user.id, user.status === 'approved' ? 'inactive' : 'approved')} className="text-gray-600 hover:text-gray-900 bg-gray-50 p-2 rounded-lg">
-                          <Shield className="w-4 h-4" />
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

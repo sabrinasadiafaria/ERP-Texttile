@@ -8,7 +8,6 @@ import heroImage from '@/assets/hero.png';
 
 // Asset Images (matching Sustainability page style)
 import manufacturingHero from '@/assets/manufacturing-hero.jpg';
-import greenFactory from '@/assets/green-factory.jpg';
 import exportPackaging from '@/assets/export-packaging.png';
 
 export function Contact() {

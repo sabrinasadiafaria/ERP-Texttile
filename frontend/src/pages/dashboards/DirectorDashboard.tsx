@@ -1,10 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { 
   FolderKanban, 
   Activity, 
-  CheckCircle,
-  Clock,
   AlertTriangle,
   Loader2,
   Box

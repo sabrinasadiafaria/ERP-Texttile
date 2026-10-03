@@ -10,6 +10,7 @@ export function YarnManagerDashboard() {
     inventoryCount: 0,
     activeKPOs: 0
   });
+  const [recentInspections, setRecentInspections] = useState<any[]>([]);
 
   useEffect(() => {
     async function fetchStats() {
@@ -24,6 +25,14 @@ export function YarnManagerDashboard() {
         inventoryCount: invCount || 0,
         activeKPOs: kpoCount || 0,
       });
+
+      const { data: inspections } = await supabase
+        .from('quality_inspections')
+        .select('*, goods_receipts(purchase_orders(po_number), yarn_lots(lot_number, yarn_master(yarn_type)))')
+        .order('created_at', { ascending: false })
+        .limit(5);
+
+      if (inspections) setRecentInspections(inspections);
     }
     fetchStats();
   }, []);
@@ -98,24 +107,31 @@ export function YarnManagerDashboard() {
             </Link>
           </div>
           <div className="space-y-4">
-            <div className="flex items-start justify-between p-3 bg-gray-50 rounded-lg border border-gray-100">
-               <div>
-                  <p className="text-sm font-medium text-gray-900">PO-1005 (Lot YRN-C20-001)</p>
-                  <p className="text-xs text-gray-500 mt-0.5">Cotton 20/2 - Acme Yarns Ltd.</p>
-               </div>
-               <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize bg-yellow-100 text-yellow-800">
-                 Pending
-               </span>
-            </div>
-            <div className="flex items-start justify-between p-3 bg-gray-50 rounded-lg border border-gray-100">
-               <div>
-                  <p className="text-sm font-medium text-gray-900">PO-1002 (Lot YRN-P30-004)</p>
-                  <p className="text-xs text-gray-500 mt-0.5">Polyester 30s - TexCo</p>
-               </div>
-               <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize bg-green-100 text-green-800">
-                 Passed
-               </span>
-            </div>
+            {recentInspections.length === 0 ? (
+              <div className="flex items-center justify-center h-24 bg-gray-50 rounded-lg border border-dashed border-gray-200">
+                <span className="text-gray-400 text-sm">No recent inspections</span>
+              </div>
+            ) : (
+              recentInspections.map((inspection: any) => (
+                <div key={inspection.id} className="flex items-start justify-between p-3 bg-gray-50 rounded-lg border border-gray-100">
+                   <div>
+                      <p className="text-sm font-medium text-gray-900">
+                        {inspection.goods_receipts?.purchase_orders?.po_number || 'Unknown PO'} (Lot {inspection.goods_receipts?.yarn_lots?.lot_number || 'N/A'})
+                      </p>
+                      <p className="text-xs text-gray-500 mt-0.5">
+                        {inspection.goods_receipts?.yarn_lots?.yarn_master?.yarn_type || 'Unknown Yarn'}
+                      </p>
+                   </div>
+                   <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${
+                      inspection.status === 'Passed' ? 'bg-green-100 text-green-800' :
+                      inspection.status === 'Rejected' ? 'bg-red-100 text-red-800' :
+                      'bg-yellow-100 text-yellow-800'
+                   }`}>
+                     {inspection.status}
+                   </span>
+                </div>
+              ))
+            )}
           </div>
         </div>
       </div>

@@ -1,14 +1,18 @@
 import { Navigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth, type PermissionAction } from '@/contexts/AuthContext';
 import { Loader2 } from 'lucide-react';
 
 interface RoleProtectedRouteProps {
-  allowedRoles: string[];
+  /** Permission check against the RBAC matrix (preferred). */
+  module?: string;
+  action?: PermissionAction;
+  /** Optional extra role whitelist (kept for narrow cases such as dashboards). */
+  allowedRoles?: string[];
   children: React.ReactNode;
 }
 
-export function RoleProtectedRoute({ allowedRoles, children }: RoleProtectedRouteProps) {
-  const { profile, isLoading } = useAuth();
+export function RoleProtectedRoute({ module, action = 'view', allowedRoles, children }: RoleProtectedRouteProps) {
+  const { profile, isLoading, can } = useAuth();
 
   if (isLoading) {
     return (
@@ -18,8 +22,10 @@ export function RoleProtectedRoute({ allowedRoles, children }: RoleProtectedRout
     );
   }
 
-  if (!profile || !profile.role || !allowedRoles.includes(profile.role)) {
-    // Redirect to a generic dashboard or unauthorized page
+  const roleOk = !allowedRoles || (!!profile?.role && allowedRoles.includes(profile.role));
+  const permOk = !module || can(module, action);
+
+  if (!profile?.role || !roleOk || !permOk) {
     return <Navigate to="/dashboard" replace />;
   }
 

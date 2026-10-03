@@ -2,17 +2,21 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Users, FolderKanban, ShoppingCart, TrendingUp, Clock } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
 
 export function MerchandiserDashboard() {
+  const { user } = useAuth();
   const [stats, setStats] = useState({
     buyers: 0,
     projects: 0,
     pos: 0,
     activeProjects: 0
   });
+  const [recentProjects, setRecentProjects] = useState<any[]>([]);
+  const [notifications, setNotifications] = useState<any[]>([]);
 
   useEffect(() => {
-    async function fetchStats() {
+    async function fetchData() {
       const { count: buyersCount } = await supabase.from('buyers').select('*', { count: 'exact', head: true });
       const { count: projectsCount } = await supabase.from('projects').select('*', { count: 'exact', head: true });
       const { count: activeProjectsCount } = await supabase.from('projects').select('*', { count: 'exact', head: true }).neq('status', 'Completed');
@@ -24,9 +28,27 @@ export function MerchandiserDashboard() {
         activeProjects: activeProjectsCount || 0,
         pos: posCount || 0,
       });
+
+      const { data: projects } = await supabase
+        .from('projects')
+        .select('id, order_number, product_name, status')
+        .order('created_at', { ascending: false })
+        .limit(5);
+      
+      if (projects) setRecentProjects(projects);
+
+      if (user) {
+        const { data: notifs } = await supabase
+          .from('notifications')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(5);
+        if (notifs) setNotifications(notifs);
+      }
     }
-    fetchStats();
-  }, []);
+    fetchData();
+  }, [user]);
 
   return (
     <div className="space-y-6">
@@ -83,8 +105,24 @@ export function MerchandiserDashboard() {
             <h2 className="text-lg font-bold text-gray-900">Recent Projects</h2>
             <Link to="/dashboard/projects" className="text-sm font-medium text-[#0047ff] hover:underline">View All</Link>
           </div>
-          <div className="flex items-center justify-center h-48 bg-gray-50 rounded-lg border border-dashed border-gray-200">
-             <span className="text-gray-400 text-sm">Chart Placeholder</span>
+          <div className="space-y-4">
+            {recentProjects.length === 0 ? (
+               <div className="flex items-center justify-center h-24 bg-gray-50 rounded-lg border border-dashed border-gray-200">
+                 <span className="text-gray-400 text-sm">No recent projects</span>
+               </div>
+            ) : (
+              recentProjects.map(project => (
+                <div key={project.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                  <div>
+                    <p className="text-sm font-medium text-gray-900">{project.order_number}</p>
+                    <p className="text-xs text-gray-500">{project.product_name}</p>
+                  </div>
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize bg-blue-50 text-blue-700">
+                    {project.status}
+                  </span>
+                </div>
+              ))
+            )}
           </div>
         </div>
         
@@ -93,13 +131,19 @@ export function MerchandiserDashboard() {
             <h2 className="text-lg font-bold text-gray-900">Recent Notifications</h2>
           </div>
           <div className="space-y-4">
-            <div className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg">
-              <Clock className="w-5 h-5 text-gray-400 mt-0.5" />
-              <div>
-                <p className="text-sm font-medium text-gray-900">PO-1004 Approved</p>
-                <p className="text-xs text-gray-500 mt-0.5">Supplier confirmed receipt of order.</p>
-              </div>
-            </div>
+            {notifications.length === 0 ? (
+              <div className="text-center text-sm text-gray-500 py-4">No recent notifications</div>
+            ) : (
+              notifications.map(notif => (
+                <div key={notif.id} className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg">
+                  <Clock className="w-5 h-5 text-gray-400 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-medium text-gray-900">{notif.title}</p>
+                    <p className="text-xs text-gray-500 mt-0.5">{notif.message}</p>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
       </div>
