@@ -34,50 +34,11 @@ import {
   Search,
 } from 'lucide-react';
 
-<<<<<<< HEAD
 // (ROLE_NAVIGATION removed, sidebar is now purely dynamic based on Supabase permissions)
 
 // ============================================================================
 // LAYOUT COMPONENT
 // ============================================================================
-=======
-const ROLE_NAVIGATION: Record<string, { name: string; path: string; icon: any }[]> = {
-  'Merchandiser': [
-    { name: 'Overview', path: '/dashboard/merchandiser', icon: LayoutDashboard },
-    { name: 'Buyers', path: '/dashboard/merchandiser/buyers', icon: Users },
-    { name: 'Projects', path: '/dashboard/merchandiser/projects', icon: FolderKanban },
-    { name: 'BOMs', path: '/dashboard/merchandiser/boms', icon: FileText },
-    { name: 'Purchase Orders', path: '/dashboard/merchandiser/pos', icon: ShoppingCart },
-    { name: 'Reports', path: '/dashboard/merchandiser/reports', icon: BarChart3 },
-  ],
-  'Yarn Manager': [
-    { name: 'Overview', path: '/dashboard/yarn-manager', icon: LayoutDashboard },
-    { name: 'Suppliers', path: '/dashboard/yarn-manager/suppliers', icon: Truck },
-    { name: 'PO Queue', path: '/dashboard/yarn-manager/purchase-orders', icon: ShoppingCart },
-    { name: 'Yarn Master', path: '/dashboard/yarn-manager/yarn-master', icon: FileText },
-    { name: 'Receipts & QA', path: '/dashboard/yarn-manager/receipts', icon: ClipboardCheck },
-    { name: 'Inventory', path: '/dashboard/yarn-manager/inventory', icon: Warehouse },
-    { name: 'Reservations', path: '/dashboard/yarn-manager/reservations', icon: Box },
-    { name: 'KPO Generation', path: '/dashboard/yarn-manager/kpos', icon: Factory },
-  ],
-  'Inventory & Store Manager': [
-    { name: 'Overview', path: '/dashboard/inventory-manager', icon: LayoutDashboard },
-    { name: 'Receiving', path: '/dashboard/inventory-manager/receiving', icon: PackageOpen },
-    { name: 'Verification', path: '/dashboard/inventory-manager/verification', icon: CheckSquare },
-    { name: 'Warehouse', path: '/dashboard/inventory-manager/warehouse', icon: Warehouse },
-    { name: 'Material Requests', path: '/dashboard/inventory-manager/requests', icon: FileOutput },
-    { name: 'Material Issues', path: '/dashboard/inventory-manager/issues', icon: ArrowLeftRight },
-    { name: 'Returns & Adj.', path: '/dashboard/inventory-manager/exceptions', icon: AlertTriangle },
-    { name: 'Finished Goods', path: '/dashboard/inventory-manager/finished-goods', icon: PackageCheck },
-    { name: 'Reports', path: '/dashboard/inventory-manager/reports', icon: BarChart3 },
-  ],
-  'Admin': [
-    { name: 'Dashboard', path: '/dashboard/admin', icon: LayoutDashboard },
-    { name: 'User Management', path: '/dashboard/admin/users', icon: Users },
-    { name: 'Activity Logs', path: '/dashboard/admin/logs', icon: ClipboardCheck },
-  ],
-};
->>>>>>> development
 
 export function DashboardLayout() {
   const { profile, signOut, session, setDemoRole, demoRoles, permissions } = useAuth();
