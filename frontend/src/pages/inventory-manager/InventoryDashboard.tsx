@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { PackageOpen, CheckSquare, Warehouse, FileOutput, ArrowRight, AlertTriangle, PackageCheck } from 'lucide-react';
+import { PackageOpen, CheckSquare, Warehouse, FileOutput, ArrowRight, PackageCheck } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export function InventoryDashboard() {

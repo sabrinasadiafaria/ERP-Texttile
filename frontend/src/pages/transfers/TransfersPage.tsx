@@ -3,11 +3,7 @@ import {
   ArrowRightLeft, CheckCircle2, XCircle, AlertTriangle,
   Filter, Loader2, Clock, Calculator, ArrowRight, FileText,
 } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
-import {
-  ArrowRightLeft, CheckCircle2, XCircle, AlertTriangle,
-  Filter, Loader2, Clock, Calculator, ArrowRight, FileText,
-} from 'lucide-react';
+
 import type { TransferStatus } from '@/lib/services/production';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';

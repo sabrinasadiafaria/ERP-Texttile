@@ -5,7 +5,6 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
-import type { ActivityLog } from '@/lib/services/production';
 
 export type YarnRequestStatus = 'Pending' | 'Approved' | 'Partially Approved' | 'Rejected' | 'Issued';
 
@@ -191,8 +190,6 @@ export function YarnRequestPage() {
 
   const selected = selectedId ? requests.find(r => r.id === selectedId) : null;
   const selectedProject = selected ? projects.find(p => p.id === selected.project_id) : null;
-  // Activity log scoped to yarn requests
-  const yarnLogs: ActivityLog[] = DEMO_ACTIVITY_LOGS.filter(l => l.entity_type === 'yarn').slice(0, 6);
 
   return (
     <div className="space-y-6">
