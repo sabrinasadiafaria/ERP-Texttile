@@ -25,8 +25,8 @@ function FooterBrand() {
 
 function FooterNavigation() {
   const links = [
-    { title: 'Products', items: [{ name: 'Core ERP', to: '/products' }, { name: 'AutoCut', to: '/products' }, { name: 'Green Module', to: '/products' }] },
-    { title: 'Capabilities', items: [{ name: 'Smart Factories', to: '/capabilities' }, { name: 'Quality Control', to: '/capabilities' }, { name: 'Supply Chain', to: '/capabilities' }] },
+    { title: 'Products', items: [{ name: 'Homeware', to: '/products' }, { name: 'Dog Jumpers', to: '/products' }, { name: 'Knitted Accessories', to: '/products' }, { name: 'Christmas Jumpers', to: '/products' }, { name: 'Ladieswear & Menswear', to: '/products' }] },
+    { title: 'Services', items: [{ name: 'Embroidery', to: '/capabilities' }, { name: 'Finishing', to: '/capabilities' }, { name: 'Manufacturing', to: '/capabilities' }, { name: 'Knitting', to: '/capabilities' }, { name: 'Design & Sampling', to: '/capabilities' }] },
     { title: 'Company', items: [{ name: 'About Us', to: '/about' }, { name: 'Sustainability', to: '/sustainability' }, { name: 'Certifications', to: '/certifications' }, { name: 'Contact', to: '/contact' }] }
   ];
 
@@ -57,15 +57,15 @@ function FooterContact() {
       <ul className="flex flex-col space-y-3">
         <li className="flex items-start gap-3 text-sm text-secondary-foreground/70">
           <MapPin className="w-5 h-5 text-accent shrink-0" />
-          <span>123 Manufacturing Dist.<br />Industrial Park, NY 10001</span>
+          <span>Al-Amin Centre, Madani Nagar,<br />Sanarpar, Siddirganj, Narayanganj</span>
         </li>
         <li className="flex items-center gap-3 text-sm text-secondary-foreground/70">
           <Phone className="w-5 h-5 text-accent shrink-0" />
-          <span>+1 (555) 123-4567</span>
+          <span>+880 2-7690123</span>
         </li>
         <li className="flex items-center gap-3 text-sm text-secondary-foreground/70">
           <Mail className="w-5 h-5 text-accent shrink-0" />
-          <span>partners@alaminexport.com</span>
+          <span>info@alaminexport.com</span>
         </li>
       </ul>
     </div>

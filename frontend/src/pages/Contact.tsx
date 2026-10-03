@@ -1,38 +1,15 @@
 import { motion } from 'framer-motion';
 import { useState } from 'react';
 import { Container } from '@/components/ui/Container';
-import { SectionHeader } from '@/components/ui/SectionHeader';
 import { CTASection } from '@/components/ui/CTASection';
 import { Button } from '@/components/ui/Button';
-import { Clock, MessageSquare, MapPin, Loader2, CheckCircle } from 'lucide-react';
+import { Clock, Mail, MapPin, Loader2, CheckCircle, ShieldCheck, Send, Sparkles, Building2 } from 'lucide-react';
 import heroImage from '@/assets/hero.png';
 
-const LOCATIONS = [
-  {
-    hub: 'HEADQUARTERS',
-    city: 'Frankfurt',
-    address: 'Opernplatz 14, 60313 Frankfurt am Main, Germany',
-    time: 'CET (UTC+1)',
-  },
-  {
-    hub: 'REGIONAL HUB',
-    city: 'New York',
-    address: '200 Greenwich St, New York, NY 10007, USA',
-    time: 'EST (UTC-5)',
-  },
-  {
-    hub: 'REGIONAL HUB',
-    city: 'Hong Kong',
-    address: '1 Austin Rd W, West Kowloon, Hong Kong',
-    time: 'HKT (UTC+8)',
-  },
-  {
-    hub: 'REGIONAL HUB',
-    city: 'Ho Chi Minh',
-    address: '29 Le Duan St, District 1, Ho Chi Minh City, Vietnam',
-    time: 'ICT (UTC+7)',
-  }
-];
+// Asset Images (matching Sustainability page style)
+import manufacturingHero from '@/assets/manufacturing-hero.jpg';
+import greenFactory from '@/assets/green-factory.jpg';
+import exportPackaging from '@/assets/export-packaging.png';
 
 export function Contact() {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -63,7 +40,6 @@ export function Contact() {
     if (!validate()) return;
     
     setIsSubmitting(true);
-    // Mock API call
     setTimeout(() => {
       setIsSubmitting(false);
       setIsSuccess(true);
@@ -73,183 +49,281 @@ export function Contact() {
   };
 
   return (
-    <div className="w-full">
-      {/* Hero Section */}
-      <section className="relative h-[400px] flex items-center">
-        <div className="absolute inset-0 z-0">
-          <img src={heroImage} alt="Global Connectivity" className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-black/60" />
+    <div className="w-full font-sans bg-zinc-950 text-white min-h-screen pt-20 overflow-hidden selection:bg-[#0047ff] selection:text-white">
+      
+      {/* 1. Hero Section */}
+      <section className="relative min-h-[480px] flex items-center justify-center pt-16 pb-16 overflow-hidden">
+        <div className="absolute inset-0 z-0 opacity-30">
+          <img src={heroImage} alt="Al-Amin Export HQ" className="w-full h-full object-cover" />
         </div>
+        <div className="absolute inset-0 bg-gradient-to-b from-zinc-950/90 via-zinc-950/80 to-zinc-950" />
         
-        <Container className="relative z-10 text-left">
+        {/* Glow sphere */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-blue-600/15 rounded-full blur-[130px] pointer-events-none" />
+
+        <Container className="relative z-10 text-center max-w-4xl">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="max-w-2xl"
+            transition={{ duration: 0.6 }}
+            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-500/10 border border-blue-400/20 text-[#4d79ff] text-xs font-semibold uppercase tracking-widest mb-6 backdrop-blur-md"
           >
-            <p className="text-accent text-sm font-semibold tracking-wider uppercase mb-4">Global Offices</p>
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold font-heading tracking-tight text-white mb-6">
-              Global Connectivity.<br />Local Presence.
-            </h1>
-            <p className="text-lg text-white/80 leading-relaxed">
-              Connecting the world's most sophisticated brands with advanced textile engineering centers across four continents.
-            </p>
+            <Sparkles className="w-3.5 h-3.5 text-[#4d79ff]" />
+            <span>Direct Manufacturer Contact</span>
           </motion.div>
+
+          <motion.h1
+            initial={{ opacity: 0, y: 25 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.1 }}
+            className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.1] mb-6 text-white"
+          >
+            Get in Touch with Our <br className="hidden md:inline" />
+            <span className="bg-gradient-to-r from-blue-400 via-indigo-300 to-sky-400 bg-clip-text text-transparent">
+              Export Manufacturing Team
+            </span>
+          </motion.h1>
+
+          <motion.p
+            initial={{ opacity: 0, y: 25 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.2 }}
+            className="text-lg md:text-xl text-zinc-300 max-w-2xl mx-auto leading-relaxed font-normal"
+          >
+            Connect directly with our merchandising, technical sampling, and production teams at our headquarters in Narayanganj, Bangladesh.
+          </motion.p>
         </Container>
       </section>
 
-      {/* Main Content (Contact Form & Info) */}
-      <section className="py-24 bg-secondary/5">
+      {/* 2. Main Content (Contact Info & Form) */}
+      <section className="py-12 md:py-20 relative z-10">
         <Container>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start max-w-7xl mx-auto">
             
-            {/* Left Side: Info */}
-            <div className="flex flex-col space-y-8">
+            {/* Left Side: Contact Information & Plant Image Card (5 cols) */}
+            <div className="lg:col-span-5 flex flex-col space-y-6">
+              
               <div>
-                <h2 className="text-3xl font-bold font-heading text-secondary mb-4">Partner with Excellence</h2>
-                <p className="text-muted-foreground leading-relaxed">
-                  Our multi-departmental experts are ready to accelerate your supply chain. Select the appropriate channel to ensure your inquiry reaches the right technical team.
+                <span className="text-[#4d79ff] text-xs font-semibold uppercase tracking-widest block mb-2 font-mono">
+                  Direct Channels
+                </span>
+                <h2 className="text-3xl md:text-4xl font-bold text-white tracking-tight">
+                  Partner with Us
+                </h2>
+                <p className="text-zinc-400 text-sm mt-3 leading-relaxed">
+                  Have an inquiry regarding sweater sampling, yarn sourcing, or volume production? Reach out to us directly through any of our channels below.
                 </p>
               </div>
-              
-              <div className="space-y-4">
-                <motion.div
-                  initial={{ opacity: 0, x: -20 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true }}
-                  className="flex items-start gap-4 p-6 bg-card rounded-2xl border border-border/50 shadow-soft"
-                >
-                  <div className="w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center shrink-0">
-                    <Clock className="w-5 h-5 text-accent" />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-foreground mb-1">Priority Inquiry For Brand Partners</h4>
-                    <p className="text-sm text-muted-foreground">Guaranteed global mailbox routing within 4 hours.</p>
-                  </div>
-                </motion.div>
 
-                <motion.div
-                  initial={{ opacity: 0, x: -20 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: 0.1 }}
-                  className="flex items-start gap-4 p-6 bg-card rounded-2xl border border-border/50 shadow-soft"
-                >
-                  <div className="w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center shrink-0">
-                    <MessageSquare className="w-5 h-5 text-accent" />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-foreground mb-1">Immediate Assistance</h4>
-                    <p className="text-sm text-muted-foreground">
-                      Visit our <a href="#" className="text-accent hover:underline">Live Support</a> or check the <a href="#" className="text-accent hover:underline">Technical FAQ</a>.
-                    </p>
-                  </div>
-                </motion.div>
+              {/* Plant Image Card (Sustainability Page Style) */}
+              <motion.div 
+                whileHover={{ scale: 1.02 }}
+                className="relative aspect-[16/10] rounded-2xl overflow-hidden shadow-xl border border-zinc-800 group"
+              >
+                <img 
+                  src={manufacturingHero} 
+                  alt="Al-Amin Export Manufacturing Plant" 
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" 
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
+                <div className="absolute top-3 left-3 px-3 py-1 bg-black/70 backdrop-blur-md rounded-full text-[11px] font-mono font-bold text-blue-400 border border-blue-500/30 flex items-center gap-1.5">
+                  <Building2 className="w-3.5 h-3.5" /> Composite Plant
+                </div>
+                <div className="absolute bottom-3 left-4 right-4 text-white">
+                  <p className="text-sm font-bold">Narayanganj Composite Facility</p>
+                  <p className="text-xs text-zinc-300 font-mono">Al-Amin Centre, Madani Nagar, Sanarpar</p>
+                </div>
+              </motion.div>
+
+              {/* Card 1: Address */}
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                className="p-5 rounded-2xl bg-zinc-900/80 border border-zinc-800/90 hover:border-[#0047ff]/40 transition-all duration-300 shadow-lg flex items-start gap-4"
+              >
+                <div className="w-11 h-11 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-[#4d79ff] shrink-0">
+                  <MapPin className="w-5 h-5" />
+                </div>
+                <div>
+                  <span className="text-[10px] font-mono font-semibold uppercase tracking-widest text-zinc-500 block mb-1">
+                    Factory & Headquarters
+                  </span>
+                  <h4 className="font-bold text-white text-base mb-1">Al-Amin Centre</h4>
+                  <p className="text-zinc-400 text-xs leading-relaxed">
+                    Madani Nagar, Sanarpar, Siddirganj, Narayanganj, Bangladesh
+                  </p>
+                </div>
+              </motion.div>
+
+              {/* Card 2: Email */}
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.1 }}
+                className="p-5 rounded-2xl bg-zinc-900/80 border border-zinc-800/90 hover:border-[#0047ff]/40 transition-all duration-300 shadow-lg flex items-start gap-4"
+              >
+                <div className="w-11 h-11 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-[#4d79ff] shrink-0">
+                  <Mail className="w-5 h-5" />
+                </div>
+                <div>
+                  <span className="text-[10px] font-mono font-semibold uppercase tracking-widest text-zinc-500 block mb-1">
+                    Official Email
+                  </span>
+                  <h4 className="font-bold text-white text-base mb-1">info@alaminexport.com</h4>
+                  <p className="text-zinc-400 text-xs">
+                    Guaranteed response from merchandising within 4 business hours.
+                  </p>
+                </div>
+              </motion.div>
+
+              {/* Card 3: Working Hours */}
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.2 }}
+                className="p-5 rounded-2xl bg-zinc-900/80 border border-zinc-800/90 hover:border-[#0047ff]/40 transition-all duration-300 shadow-lg flex items-start gap-4"
+              >
+                <div className="w-11 h-11 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-[#4d79ff] shrink-0">
+                  <Clock className="w-5 h-5" />
+                </div>
+                <div>
+                  <span className="text-[10px] font-mono font-semibold uppercase tracking-widest text-zinc-500 block mb-1">
+                    Working Hours
+                  </span>
+                  <h4 className="font-bold text-white text-base mb-1">Sat – Thu: 8:00 AM – 6:00 PM</h4>
+                  <p className="text-zinc-400 text-xs">
+                    Bangladesh Standard Time (BST, UTC+6)
+                  </p>
+                </div>
+              </motion.div>
+
+              {/* Security Banner */}
+              <div className="p-4 rounded-xl bg-blue-500/5 border border-blue-500/10 flex items-center gap-3 text-xs text-zinc-400">
+                <ShieldCheck className="w-5 h-5 text-blue-400 shrink-0" />
+                <span>All communication & technical tech pack submissions are protected under NDA confidentiality.</span>
               </div>
+
             </div>
 
-            {/* Right Side: Form */}
+            {/* Right Side: Interactive Inquiry Form (7 cols) */}
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="bg-card p-8 md:p-10 rounded-3xl shadow-xl border border-border/50"
+              transition={{ duration: 0.6 }}
+              className="lg:col-span-7 bg-zinc-900/90 p-8 md:p-10 rounded-3xl border border-zinc-800 shadow-2xl backdrop-blur-md relative"
             >
+              <div className="mb-6">
+                <h3 className="text-2xl font-bold text-white mb-2">Send Us a Direct Message</h3>
+                <p className="text-zinc-400 text-sm">Fill in your specifications and our merchandising team will get back to you promptly.</p>
+              </div>
+
               {isSuccess ? (
-                <div className="flex flex-col items-center justify-center text-center h-full py-12">
-                  <CheckCircle className="w-16 h-16 text-green-500 mb-6" />
-                  <h3 className="text-2xl font-bold font-heading mb-2">Message Sent!</h3>
-                  <p className="text-muted-foreground">Thank you for reaching out. Our team will get back to you within 24 hours.</p>
-                  <Button className="mt-8" onClick={() => setIsSuccess(false)}>Send Another Message</Button>
+                <div className="flex flex-col items-center justify-center text-center py-16">
+                  <div className="w-16 h-16 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 mb-6">
+                    <CheckCircle className="w-8 h-8" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-white mb-2">Message Received!</h3>
+                  <p className="text-zinc-400 text-sm max-w-md">Thank you for reaching out. A dedicated merchandiser from Al-Amin Export Ltd. will contact you shortly.</p>
+                  <Button className="mt-8 rounded-full bg-[#0047ff] hover:bg-blue-600 text-white font-semibold px-8" onClick={() => setIsSuccess(false)}>
+                    Send Another Message
+                  </Button>
                 </div>
               ) : (
                 <form className="flex flex-col space-y-5" onSubmit={handleSubmit}>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    <div className="flex flex-col space-y-1">
-                      <label className="text-sm font-medium text-foreground">Name *</label>
+                    <div className="flex flex-col space-y-2">
+                      <label className="text-xs font-semibold text-zinc-300 uppercase tracking-wider">Your Name *</label>
                       <input 
                         type="text" 
+                        placeholder="John Doe"
                         value={formData.name}
                         onChange={(e) => setFormData({...formData, name: e.target.value})}
-                        className={`w-full bg-secondary/5 border-transparent focus:bg-background focus:ring-1 rounded-xl px-4 py-3 text-sm transition-colors outline-none ${errors.name ? 'ring-1 ring-red-500 focus:border-red-500 focus:ring-red-500' : 'focus:border-accent focus:ring-accent'}`} 
+                        className={`w-full bg-zinc-950/80 border border-zinc-800 focus:border-[#0047ff] focus:ring-1 focus:ring-[#0047ff] rounded-xl px-4 py-3.5 text-sm text-white placeholder-zinc-600 transition-all outline-none ${errors.name ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}`} 
                       />
-                      {errors.name && <span className="text-xs text-red-500">{errors.name}</span>}
+                      {errors.name && <span className="text-xs text-red-400">{errors.name}</span>}
                     </div>
-                    <div className="flex flex-col space-y-1">
-                      <label className="text-sm font-medium text-foreground">Email *</label>
+
+                    <div className="flex flex-col space-y-2">
+                      <label className="text-xs font-semibold text-zinc-300 uppercase tracking-wider">Email Address *</label>
                       <input 
                         type="email" 
+                        placeholder="john@company.com"
                         value={formData.email}
                         onChange={(e) => setFormData({...formData, email: e.target.value})}
-                        className={`w-full bg-secondary/5 border-transparent focus:bg-background focus:ring-1 rounded-xl px-4 py-3 text-sm transition-colors outline-none ${errors.email ? 'ring-1 ring-red-500 focus:border-red-500 focus:ring-red-500' : 'focus:border-accent focus:ring-accent'}`} 
+                        className={`w-full bg-zinc-950/80 border border-zinc-800 focus:border-[#0047ff] focus:ring-1 focus:ring-[#0047ff] rounded-xl px-4 py-3.5 text-sm text-white placeholder-zinc-600 transition-all outline-none ${errors.email ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}`} 
                       />
-                      {errors.email && <span className="text-xs text-red-500">{errors.email}</span>}
+                      {errors.email && <span className="text-xs text-red-400">{errors.email}</span>}
                     </div>
                   </div>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    <div className="flex flex-col space-y-1">
-                      <label className="text-sm font-medium text-foreground">Company</label>
+                    <div className="flex flex-col space-y-2">
+                      <label className="text-xs font-semibold text-zinc-300 uppercase tracking-wider">Company / Brand Name</label>
                       <input 
                         type="text" 
+                        placeholder="Fashion Apparel Ltd."
                         value={formData.company}
                         onChange={(e) => setFormData({...formData, company: e.target.value})}
-                        className="w-full bg-secondary/5 border-transparent focus:bg-background focus:border-accent focus:ring-1 focus:ring-accent rounded-xl px-4 py-3 text-sm transition-colors outline-none" 
+                        className="w-full bg-zinc-950/80 border border-zinc-800 focus:border-[#0047ff] focus:ring-1 focus:ring-[#0047ff] rounded-xl px-4 py-3.5 text-sm text-white placeholder-zinc-600 transition-all outline-none" 
                       />
                     </div>
-                    <div className="flex flex-col space-y-1">
-                      <label className="text-sm font-medium text-foreground">Phone</label>
+
+                    <div className="flex flex-col space-y-2">
+                      <label className="text-xs font-semibold text-zinc-300 uppercase tracking-wider">Phone / WhatsApp</label>
                       <input 
                         type="tel" 
+                        placeholder="+1 (555) 000-0000"
                         value={formData.phone}
                         onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                        className="w-full bg-secondary/5 border-transparent focus:bg-background focus:border-accent focus:ring-1 focus:ring-accent rounded-xl px-4 py-3 text-sm transition-colors outline-none" 
+                        className="w-full bg-zinc-950/80 border border-zinc-800 focus:border-[#0047ff] focus:ring-1 focus:ring-[#0047ff] rounded-xl px-4 py-3.5 text-sm text-white placeholder-zinc-600 transition-all outline-none" 
                       />
                     </div>
                   </div>
 
-                  <div className="flex flex-col space-y-1">
-                    <label className="text-sm font-medium text-foreground">Subject *</label>
+                  <div className="flex flex-col space-y-2">
+                    <label className="text-xs font-semibold text-zinc-300 uppercase tracking-wider">Inquiry Subject *</label>
                     <select 
                       value={formData.subject}
                       onChange={(e) => setFormData({...formData, subject: e.target.value})}
-                      className={`w-full bg-secondary/5 border-transparent focus:bg-background focus:ring-1 rounded-xl px-4 py-3 text-sm transition-colors outline-none appearance-none ${errors.subject ? 'ring-1 ring-red-500 focus:border-red-500 focus:ring-red-500' : 'focus:border-accent focus:ring-accent'}`}
+                      className={`w-full bg-zinc-950/80 border border-zinc-800 focus:border-[#0047ff] focus:ring-1 focus:ring-[#0047ff] rounded-xl px-4 py-3.5 text-sm text-white transition-all outline-none ${errors.subject ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}`}
                     >
-                      <option value="">Select a subject...</option>
-                      <option value="sales">Sales & Partnerships</option>
-                      <option value="support">Technical Support</option>
-                      <option value="general">General Inquiry</option>
+                      <option value="" className="bg-zinc-900 text-zinc-400">Select inquiry type...</option>
+                      <option value="sampling" className="bg-zinc-900 text-white">Sweater Sampling & CAD Tech Pack</option>
+                      <option value="production" className="bg-zinc-900 text-white">Bulk Order & Production Capacity</option>
+                      <option value="yarn" className="bg-zinc-900 text-white">Yarn & Gauge Specifications</option>
+                      <option value="compliance" className="bg-zinc-900 text-white">Compliance & Audit Reports</option>
+                      <option value="general" className="bg-zinc-900 text-white">General Business Inquiry</option>
                     </select>
-                    {errors.subject && <span className="text-xs text-red-500">{errors.subject}</span>}
+                    {errors.subject && <span className="text-xs text-red-400">{errors.subject}</span>}
                   </div>
 
-                  <div className="flex flex-col space-y-1">
-                    <label className="text-sm font-medium text-foreground">Message *</label>
+                  <div className="flex flex-col space-y-2">
+                    <label className="text-xs font-semibold text-zinc-300 uppercase tracking-wider">Message / Project Details *</label>
                     <textarea 
                       rows={4} 
+                      placeholder="Please share details such as desired product category, yarn preference, gauge, quantity, or target delivery timeframe..."
                       value={formData.message}
                       onChange={(e) => setFormData({...formData, message: e.target.value})}
-                      className={`w-full bg-secondary/5 border-transparent focus:bg-background focus:ring-1 rounded-xl px-4 py-3 text-sm transition-colors outline-none resize-none ${errors.message ? 'ring-1 ring-red-500 focus:border-red-500 focus:ring-red-500' : 'focus:border-accent focus:ring-accent'}`}
+                      className={`w-full bg-zinc-950/80 border border-zinc-800 focus:border-[#0047ff] focus:ring-1 focus:ring-[#0047ff] rounded-xl px-4 py-3.5 text-sm text-white placeholder-zinc-600 transition-all outline-none resize-none ${errors.message ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}`}
                     ></textarea>
-                    {errors.message && <span className="text-xs text-red-500">{errors.message}</span>}
+                    {errors.message && <span className="text-xs text-red-400">{errors.message}</span>}
                   </div>
 
                   <Button 
                     type="submit" 
                     disabled={isSubmitting}
-                    className="w-full bg-primary hover:bg-primary/90 text-primary-foreground py-6 text-base font-bold rounded-xl mt-2 disabled:opacity-70"
+                    className="w-full bg-[#0047ff] hover:bg-blue-600 text-white py-6 text-base font-bold rounded-xl mt-4 shadow-lg shadow-blue-500/25 flex items-center justify-center gap-2 transition-all"
                   >
                     {isSubmitting ? (
-                      <span className="flex items-center gap-2"><Loader2 className="w-5 h-5 animate-spin" /> Sending...</span>
+                      <span className="flex items-center gap-2"><Loader2 className="w-5 h-5 animate-spin" /> Submitting...</span>
                     ) : (
-                      'Submit Request →'
+                      <span className="flex items-center gap-2">Submit Inquiry <Send className="w-4 h-4 ml-1" /></span>
                     )}
                   </Button>
-                  
-                  <p className="text-xs text-center text-muted-foreground mt-4">
-                    Industrial-Grade Data Security. Your data is encrypted.
-                  </p>
                 </form>
               )}
             </motion.div>
@@ -258,62 +332,64 @@ export function Contact() {
         </Container>
       </section>
 
-      {/* Global Footprint */}
-      <section className="py-24 bg-background">
+      {/* 3. Facility & Shipping Showcase Banner (Matching Sustainability Page Style) */}
+      <section className="py-16 bg-zinc-900/40 border-t border-zinc-800/80 relative z-10">
         <Container>
-          <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
-            <SectionHeader
-              title="Our Global Footprint"
-              description="Strategic hubs positioned for rapid response and distribution."
-              align="left"
-              className="mb-0 max-w-xl"
-            />
-            <Button variant="outline" size="sm" className="hidden md:flex rounded-full px-6">
-              <MapPin className="w-4 h-4 mr-2" />
-              See Interactive Map
-            </Button>
-          </div>
+          <div className="max-w-6xl mx-auto">
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.7 }}
+              className="grid lg:grid-cols-12 gap-8 items-center bg-zinc-900 rounded-3xl p-8 md:p-10 border border-zinc-800 shadow-xl"
+            >
+              <div className="lg:col-span-7">
+                <motion.div 
+                  whileHover={{ scale: 1.02 }}
+                  className="relative aspect-[16/9] rounded-2xl overflow-hidden shadow-2xl border border-zinc-700/60 group"
+                >
+                  <img 
+                    src={exportPackaging} 
+                    alt="Export Packaging & Shipping Facility" 
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" 
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                  <div className="absolute top-3 left-3 px-3 py-1 bg-black/70 backdrop-blur-md rounded-full text-xs font-mono font-bold text-[#4d79ff] border border-blue-500/30">
+                    Export Logistics & Shipment Hub
+                  </div>
+                  <div className="absolute bottom-3 left-4 right-4 text-white">
+                    <p className="text-sm font-bold">Export Packaging & Quality Check Hub</p>
+                    <p className="text-xs text-zinc-300">Serving global fashion buyers with timely international dispatch</p>
+                  </div>
+                </motion.div>
+              </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
-            {LOCATIONS.map((loc, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-                className="bg-card p-6 rounded-2xl border border-border/50 shadow-soft hover:shadow-md transition-shadow flex flex-col h-full"
-              >
-                <div className="text-xs font-bold text-accent uppercase tracking-wider mb-2">{loc.hub}</div>
-                <h4 className="text-xl font-heading font-bold text-foreground mb-4">{loc.city}</h4>
-                <p className="text-sm text-muted-foreground flex-1 mb-6 leading-relaxed">
-                  {loc.address}
+              <div className="lg:col-span-5 flex flex-col justify-center space-y-4">
+                <span className="text-[#4d79ff] font-semibold text-xs uppercase tracking-widest font-mono">
+                  Direct Factory Presence
+                </span>
+                <h3 className="text-2xl md:text-3xl font-bold text-white tracking-tight">
+                  Al-Amin Export Centre, Narayanganj
+                </h3>
+                <p className="text-zinc-400 text-sm leading-relaxed">
+                  Operating from a modern composite sweater factory in Narayanganj, Bangladesh equipped with computerized Japanese Shima Seiki machines.
                 </p>
-                <div className="text-sm font-medium text-foreground bg-secondary/5 inline-flex items-center px-3 py-1.5 rounded-lg w-fit">
-                  {loc.time}
+
+                <div className="p-4 rounded-2xl bg-zinc-950 border border-zinc-800 font-mono text-xs text-zinc-300">
+                  Address: <span className="text-white font-bold">Al-Amin Centre, Madani Nagar, Sanarpar, Siddirganj, Narayanganj</span>
+                  <br />
+                  Email: <span className="text-[#4d79ff] font-bold">info@alaminexport.com</span>
                 </div>
-              </motion.div>
-            ))}
+              </div>
+            </motion.div>
           </div>
-          
-          {/* Google Maps Placeholder */}
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.95 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            className="w-full h-[400px] bg-secondary/10 border border-border/50 rounded-3xl flex flex-col items-center justify-center text-muted-foreground"
-          >
-            <MapPin className="w-12 h-12 mb-4 opacity-50" />
-            <p className="text-lg font-medium">Interactive Global Map</p>
-            <p className="text-sm opacity-70">Google Maps Integration Pending</p>
-          </motion.div>
         </Container>
       </section>
 
       {/* CTA Section */}
       <CTASection
         headline="Ready for a technical breakdown?"
-        description="Book a 30-minute deep-dive with our principal textile engineers to discuss your R&D roadmap and material requirements."
+        description="Book a technical deep-dive with our principal merchandising and CAD engineers to discuss your sweater design roadmap."
         primaryCtaText="Schedule Consultation"
         secondaryCtaText="Download Specs Book"
       />

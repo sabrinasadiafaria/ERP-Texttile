@@ -4,7 +4,7 @@ import { Loader2, Box, Send } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 
 export function YarnReservations() {
-  const [activeTab, setActiveTab] = useState<'reservations' | 'issues'>('reservations');
+  const [activeTab, setActiveTab] = useState<'requests' | 'reservations' | 'issues'>('requests');
   const [data, setData] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -15,7 +15,13 @@ export function YarnReservations() {
 
   const fetchData = async () => {
     setIsLoading(true);
-    if (activeTab === 'reservations') {
+    if (activeTab === 'requests') {
+      const { data: reqData } = await supabase
+        .from('yarn_requests')
+        .select('*, projects(order_number, product_name), profiles!yarn_requests_requested_by_fkey(full_name)')
+        .order('created_at', { ascending: false });
+      if (reqData) setData(reqData);
+    } else if (activeTab === 'reservations') {
       const { data: resData } = await supabase
         .from('yarn_reservations')
         .select('*, projects(order_number, product_name), yarn_lots(lot_number, yarn_master(yarn_type))')
@@ -31,18 +37,37 @@ export function YarnReservations() {
     setIsLoading(false);
   };
 
-  const handleIssueYarn = async (resId: string, projectId: string, lotId: string, quantity: number) => {
-    // 1. Create a dummy KPO (or use existing, but for demo we just issue it)
-    const { data: kpo } = await supabase.from('knitting_production_orders').insert([{
+  const handleApproveRequest = async (reqId: string, projectId: string, qty: number) => {
+    // 1. Approve Request
+    await supabase.from('yarn_requests').update({ status: 'APPROVED', approved_quantity: qty }).eq('id', reqId);
+    
+    // 2. Mock reservation for now
+    await supabase.from('yarn_reservations').insert([{
       project_id: projectId,
-      kpo_number: `KPO-${Math.floor(Math.random() * 10000)}`,
-      status: 'Issued'
+      quantity: qty,
+      status: 'Reserved'
+    }]);
+
+    fetchData();
+  };
+
+  const handleIssueYarn = async (resId: string, projectId: string, lotId: string, quantity: number) => {
+    const { data: userData } = await supabase.auth.getUser();
+
+    // 1. Create a generic production record for Knitting
+    const { data: pRec } = await supabase.from('production_records').insert([{
+      project_id: projectId,
+      department: 'knitting',
+      input_quantity: quantity,
+      planned_quantity: quantity,
+      status: 'RECEIVED',
+      created_by: userData?.user?.id
     }]).select().single();
 
-    if (kpo) {
+    if (pRec) {
       // 2. Insert into yarn_issues
       await supabase.from('yarn_issues').insert([{
-        kpo_id: kpo.id,
+        kpo_id: null, // deprecated in favor of production_records
         project_id: projectId,
         lot_id: lotId,
         quantity: quantity,
@@ -50,6 +75,15 @@ export function YarnReservations() {
 
       // 3. Update reservation status
       await supabase.from('yarn_reservations').update({ status: 'Issued' }).eq('id', resId);
+      
+      // 4. Log Activity
+      await supabase.from('activity_logs').insert({
+        user_id: userData?.user?.id,
+        action: 'ISSUE_YARN',
+        module: 'yarn',
+        description: `Issued ${quantity}kg yarn to Knitting for project ${projectId}`
+      });
+      
       fetchData();
     }
   };
@@ -62,6 +96,15 @@ export function YarnReservations() {
       </div>
 
       <div className="flex space-x-4 border-b border-gray-200">
+        <button
+          onClick={() => setActiveTab('requests')}
+          className={`pb-4 px-2 text-sm font-medium border-b-2 transition-colors ${
+            activeTab === 'requests' ? 'border-[#0047ff] text-[#0047ff]' : 'border-transparent text-gray-500 hover:text-gray-700'
+          }`}
+        >
+          <Box className="w-4 h-4 inline mr-2" />
+          Requests
+        </button>
         <button
           onClick={() => setActiveTab('reservations')}
           className={`pb-4 px-2 text-sm font-medium border-b-2 transition-colors ${
@@ -86,7 +129,15 @@ export function YarnReservations() {
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              {activeTab === 'reservations' ? (
+              {activeTab === 'requests' ? (
+                <tr className="bg-gray-50/50 border-b border-gray-100">
+                  <th className="py-3 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">Project</th>
+                  <th className="py-3 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">Requested By</th>
+                  <th className="py-3 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider text-right">Req Qty</th>
+                  <th className="py-3 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                  <th className="py-3 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider text-right">Actions</th>
+                </tr>
+              ) : activeTab === 'reservations' ? (
                 <tr className="bg-gray-50/50 border-b border-gray-100">
                   <th className="py-3 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">Project</th>
                   <th className="py-3 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">Yarn Lot</th>
@@ -117,6 +168,35 @@ export function YarnReservations() {
                     No records found.
                   </td>
                 </tr>
+              ) : activeTab === 'requests' ? (
+                data.map((req) => (
+                  <tr key={req.id} className="hover:bg-gray-50 transition-colors">
+                    <td className="py-4 px-6">
+                      <p className="font-medium text-gray-900">{req.projects?.order_number}</p>
+                      <p className="text-xs text-gray-500">{req.projects?.product_name}</p>
+                    </td>
+                    <td className="py-4 px-6 text-gray-900">{req.profiles?.full_name}</td>
+                    <td className="py-4 px-6 text-right font-medium">{req.requested_quantity}</td>
+                    <td className="py-4 px-6">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${
+                        req.status === 'APPROVED' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                      }`}>
+                        {req.status}
+                      </span>
+                    </td>
+                    <td className="py-4 px-6 text-right">
+                      {req.status === 'PENDING' && (
+                        <Button 
+                          onClick={() => handleApproveRequest(req.id, req.project_id, req.requested_quantity)} 
+                          size="sm" 
+                          className="bg-[#0047ff] hover:bg-blue-700 text-white"
+                        >
+                          Approve
+                        </Button>
+                      )}
+                    </td>
+                  </tr>
+                ))
               ) : activeTab === 'reservations' ? (
                 data.map((res) => (
                   <tr key={res.id} className="hover:bg-gray-50 transition-colors">

@@ -107,16 +107,16 @@ export function Home() {
         >
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 divide-y md:divide-y-0 md:divide-x divide-gray-400/30 text-center">
             <motion.div whileHover={{ scale: 1.03 }} className="flex flex-col items-center justify-center p-4 transition-transform">
-              <span className="text-4xl lg:text-5xl font-bold text-black mb-2 font-mono">25+</span>
-              <span className="text-sm tracking-widest uppercase text-black/70 font-semibold">Years of Excellence</span>
+              <span className="text-4xl lg:text-5xl font-bold text-black mb-2 font-mono">2002</span>
+              <span className="text-sm tracking-widest uppercase text-black/70 font-semibold">Established June 2002</span>
             </motion.div>
             <motion.div whileHover={{ scale: 1.03 }} className="flex flex-col items-center justify-center p-4 transition-transform">
-              <span className="text-4xl lg:text-5xl font-bold text-black mb-2 font-mono">5,000+</span>
-              <span className="text-sm tracking-widest uppercase text-black/70 font-semibold">Skilled Artisans</span>
+              <span className="text-4xl lg:text-5xl font-bold text-black mb-2 font-mono">170,000</span>
+              <span className="text-sm tracking-widest uppercase text-black/70 font-semibold">Monthly Capacity (Pieces)</span>
             </motion.div>
             <motion.div whileHover={{ scale: 1.03 }} className="flex flex-col items-center justify-center p-4 transition-transform">
-              <span className="text-4xl lg:text-5xl font-bold text-black mb-2 font-mono">20M+</span>
-              <span className="text-sm tracking-widest uppercase text-black/70 font-semibold">Annual Production (Pieces)</span>
+              <span className="text-4xl lg:text-5xl font-bold text-black mb-2 font-mono">100%</span>
+              <span className="text-sm tracking-widest uppercase text-black/70 font-semibold">Export-Oriented Sweater Plant</span>
             </motion.div>
           </div>
         </motion.div>
@@ -125,14 +125,14 @@ export function Home() {
       {/* 3. Partner Ribbon */}
       <section className="bg-[#f8f9fa] py-16 border-b border-gray-200 overflow-hidden">
         <div className="container mx-auto px-4 md:px-8 text-center">
-          <p className="text-xs font-bold tracking-[0.2em] text-gray-400 uppercase mb-10">Trusted Manufacturing Partner</p>
+          <p className="text-xs font-bold tracking-[0.2em] text-gray-400 uppercase mb-10">Certified & Audited Standards</p>
           <div className="relative w-full overflow-hidden">
             {/* Gradient masks for smooth fade effect on edges */}
             <div className="absolute left-0 top-0 bottom-0 w-24 bg-gradient-to-r from-[#f8f9fa] to-transparent z-10 pointer-events-none" />
             <div className="absolute right-0 top-0 bottom-0 w-24 bg-gradient-to-l from-[#f8f9fa] to-transparent z-10 pointer-events-none" />
 
             <motion.div
-              className="flex items-center gap-12 md:gap-20 lg:gap-28 w-max opacity-60 grayscale"
+              className="flex items-center gap-12 md:gap-20 lg:gap-28 w-max opacity-80"
               animate={{ x: ['0%', '-50%'] }}
               transition={{
                 ease: 'linear',
@@ -140,8 +140,8 @@ export function Home() {
                 repeat: Infinity,
               }}
             >
-              {['Walmart', 'Target', 'H&M', 'ZARA', 'Uniqlo', 'Levi\'s', 'GAP', 'Walmart', 'Target', 'H&M', 'ZARA', 'Uniqlo', 'Levi\'s', 'GAP'].map((partner, idx) => (
-                <span key={idx} className="text-2xl md:text-3xl font-bold text-gray-800 italic font-serif whitespace-nowrap shrink-0">
+              {['Sedex Certified', 'GSCS Audited', 'ASCB Accredited', 'Organic 100', 'GOTS Certified', 'Sedex Certified', 'GSCS Audited', 'ASCB Accredited', 'Organic 100', 'GOTS Certified'].map((partner, idx) => (
+                <span key={idx} className="text-2xl md:text-3xl font-bold text-gray-800 font-sans tracking-tight whitespace-nowrap shrink-0">
                   {partner}
                 </span>
               ))}

@@ -13,6 +13,7 @@ import { Login } from '@/pages/auth/Login';
 import { Signup } from '@/pages/auth/Signup';
 import { ForgotPassword } from '@/pages/auth/ForgotPassword';
 import { ResetPassword } from '@/pages/auth/ResetPassword';
+import { PendingApproval } from '@/pages/auth/PendingApproval';
 
 // Dashboard Components
 import { ProtectedRoute } from '@/components/layout/ProtectedRoute';
@@ -61,6 +62,32 @@ import { Exceptions } from '@/pages/inventory-manager/Exceptions';
 import { FinishedGoods } from '@/pages/inventory-manager/FinishedGoods';
 import { InventoryReports } from '@/pages/inventory-manager/InventoryReports';
 
+// Admin Pages
+import { AdminDashboard } from '@/pages/admin/AdminDashboard';
+import { UserManagement } from '@/pages/admin/UserManagement';
+import { ActivityLogs } from '@/pages/admin/ActivityLogs';
+
+const ROLES = [
+  'Director',
+  'Admin',
+  'Merchandiser',
+  'Yarn Manager',
+  'Inventory & Store Manager',
+  'Knitting PM',
+  'Knitting APM',
+  'Linking PM',
+  'Linking APM',
+  'Cutting & Trimming PM',
+  'Cutting & Trimming APM',
+  'Sewing PM',
+  'Sewing APM',
+  'Washing PM',
+  'Washing APM',
+  'Ironing PM',
+  'Ironing APM',
+  'Packaging PM',
+  'Packaging APM'
+];
 export const router = createBrowserRouter([
   {
     path: '/',
@@ -77,6 +104,7 @@ export const router = createBrowserRouter([
       { path: 'signup', element: <Signup /> },
       { path: 'forgot-password', element: <ForgotPassword /> },
       { path: 'reset-password', element: <ResetPassword /> },
+      { path: 'pending-approval', element: <PendingApproval /> },
     ],
   },
   {
@@ -107,8 +135,8 @@ export const router = createBrowserRouter([
             ),
             children: [
               { index: true, element: <AdminDashboard /> },
-              { path: 'users', element: <AdminDashboard /> },
-              { path: 'departments', element: <AdminDashboard /> },
+              { path: 'users', element: <UserManagement /> },
+              { path: 'logs', element: <ActivityLogs /> },
             ],
           },
           {

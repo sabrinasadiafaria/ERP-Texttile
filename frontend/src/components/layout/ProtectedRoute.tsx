@@ -3,7 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Loader2 } from 'lucide-react';
 
 export function ProtectedRoute() {
-  const { session, isLoading, profile } = useAuth();
+  const { session, profile, isLoading } = useAuth();
   const location = useLocation();
 
   if (isLoading) {
@@ -18,6 +18,10 @@ export function ProtectedRoute() {
   // Allow through so we can test role-based nav.
   if (!session && !profile) {
     return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  if (profile?.status === 'pending') {
+    return <Navigate to="/pending-approval" replace />;
   }
 
   return <Outlet />;

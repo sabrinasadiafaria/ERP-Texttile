@@ -1,357 +1,177 @@
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import {
-  FolderKanban, CheckCircle2, AlertTriangle, TrendingUp,
-  ArrowRight, Clock, Activity, BarChart3,
-  Loader2, XCircle, Zap
+import React, { useEffect, useState } from 'react';
+import { supabase } from '@/lib/supabase';
+import { 
+  FolderKanban, 
+  Activity, 
+  CheckCircle,
+  Clock,
+  AlertTriangle,
+  Loader2,
+  Box
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import { DEMO_PROJECTS, DEMO_TRANSFERS, DEMO_ACTIVITY_LOGS, getDepartmentProgressPercentages, getProjectProgress } from '@/lib/services/demoData';
-import { PRODUCTION_ORDER, type Department } from '@/lib/services/production';
-
-interface DirectorStats {
-  totalActive: number;
-  totalCompleted: number;
-  totalDelayed: number;
-  todayProduction: number;
-  pendingActions: number;
-  activeDepartments: number;
-}
 
 export function DirectorDashboard() {
-  const navigate = useNavigate();
-  const [stats, setStats] = useState<DirectorStats>({
-    totalActive: 0,
-    totalCompleted: 0,
-    totalDelayed: 0,
-    todayProduction: 0,
-    pendingActions: 0,
-    activeDepartments: 0,
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({
+    totalProjects: 0,
+    activeProjects: 0,
+    completedProjects: 0,
+    delayedProjects: 0,
+    pendingYarnRequests: 0,
+    totalFinishedGoods: 0
   });
-  const [deptProgress, setDeptProgress] = useState<Record<Department, number>>({} as Record<Department, number>);
-  const [recentActivity] = useState(DEMO_ACTIVITY_LOGS.slice(0, 8));
-  const [pendingAlerts, setPendingAlerts] = useState<{type: string; message: string; link: string}[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+
+  const [activeProjectsList, setActiveProjectsList] = useState<any[]>([]);
 
   useEffect(() => {
-    // Compute stats from demo data
-    const active = DEMO_PROJECTS.filter(p => p.status !== 'Completed' && p.status !== 'Cancelled' && p.status !== 'Draft');
-    const completed = DEMO_PROJECTS.filter(p => p.status === 'Completed');
-    const delayed = DEMO_PROJECTS.filter(p => p.status === 'Delayed');
-    const pendingTransfers = DEMO_TRANSFERS.filter(t => t.status === 'Pending');
-
-    // Today's production: use demo records as proxy
-    const todayProd = 36700;
-
-    setStats({
-      totalActive: active.length,
-      totalCompleted: completed.length,
-      totalDelayed: delayed.length,
-      todayProduction: todayProd,
-      pendingActions: pendingTransfers.length,
-      activeDepartments: 8,
-    });
-
-    setDeptProgress(getDepartmentProgressPercentages());
-
-    // Build alerts
-    const alerts: {type: string; message: string; link: string}[] = [];
-
-    // Delayed projects
-    for (const p of delayed) {
-      alerts.push({
-        type: 'error',
-        message: `Project ${p.project_id} (${p.buyers?.company_name}) is ${Math.floor((new Date(p.delivery_date).getTime() - Date.now()) / (1000*60*60*24))} days overdue`,
-        link: `/dashboard/projects/${p.id}`,
-      });
-    }
-
-    // Pending transfers
-    if (pendingTransfers.length > 0) {
-      alerts.push({
-        type: 'warning',
-        message: `${pendingTransfers.length} transfer request(s) pending across departments`,
-        link: '/dashboard/transfers',
-      });
-    }
-
-    // Low stock / yarn issues
-    alerts.push({
-      type: 'warning',
-      message: 'Yarn stock low: Superfine Merino below reorder level (current: 450kg, reorder: 500kg)',
-      link: '/dashboard/yarn-manager/inventory',
-    });
-
-    setPendingAlerts(alerts);
-    setIsLoading(false);
+    fetchDirectorData();
   }, []);
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="w-8 h-8 animate-spin text-[#0047ff]" />
-      </div>
-    );
-  }
+  const fetchDirectorData = async () => {
+    setLoading(true);
+    try {
+      const { data: projects } = await supabase.from('projects').select('*');
+      const { data: yarnReqs } = await supabase.from('yarn_requests').select('id').eq('status', 'PENDING');
+      const { data: finGoods } = await supabase.from('finished_goods').select('total_quantity');
+      
+      const pData = projects || [];
+      const totalFinished = (finGoods || []).reduce((acc, curr) => acc + (curr.total_quantity || 0), 0);
 
-  const kpis = [
-    { label: 'Active Projects', value: stats.totalActive, icon: FolderKanban, color: 'blue', bg: 'bg-blue-50' },
-    { label: 'Completed This Year', value: stats.totalCompleted, icon: CheckCircle2, color: 'green', bg: 'bg-green-50' },
-    { label: 'Delayed Projects', value: stats.totalDelayed, icon: AlertTriangle, color: stats.totalDelayed > 0 ? 'red' : 'gray', bg: stats.totalDelayed > 0 ? 'bg-red-50' : 'bg-gray-50' },
-    { label: "Today's Production", value: stats.todayProduction.toLocaleString(), icon: TrendingUp, color: 'purple', bg: 'bg-purple-50' },
-  ];
+      setStats({
+        totalProjects: pData.length,
+        activeProjects: pData.filter(p => p.status !== 'COMPLETED').length,
+        completedProjects: pData.filter(p => p.status === 'COMPLETED').length,
+        delayedProjects: pData.filter(p => p.status === 'DELAYED').length,
+        pendingYarnRequests: yarnReqs?.length || 0,
+        totalFinishedGoods: totalFinished
+      });
+
+      // Get production records for active projects to show progress
+      const activeP = pData.filter(p => p.status !== 'COMPLETED');
+      if (activeP.length > 0) {
+        const { data: prod } = await supabase
+          .from('production_records')
+          .select('*')
+          .in('project_id', activeP.map(p => p.id));
+        
+        const mapped = activeP.map(p => {
+          const pRecords = (prod || []).filter(r => r.project_id === p.id);
+          // Find the furthest department that has records
+          const currentDepts = Array.from(new Set(pRecords.map(r => r.department)));
+          return {
+            ...p,
+            departments: currentDepts.join(', ') || 'Planning'
+          };
+        });
+        setActiveProjectsList(mapped);
+      }
+      
+    } catch (error) {
+      console.error(error);
+    }
+    setLoading(false);
+  };
+
+  if (loading) {
+    return <div className="flex h-64 items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-blue-600" /></div>;
+  }
 
   return (
     <div className="space-y-6">
-
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Factory Overview</h1>
-          <p className="text-sm text-gray-500 mt-1">What is happening across the factory today</p>
-        </div>
-        <div className="flex items-center space-x-3">
-          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-            <Zap className="w-3 h-3 mr-1" />
-            {stats.activeDepartments} Active Departments
-          </span>
-          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
-            <Clock className="w-3 h-3 mr-1" />
-            {stats.pendingActions} Pending Actions
-          </span>
-        </div>
+      <div>
+        <h1 className="text-2xl font-bold text-gray-900">Director Dashboard</h1>
+        <p className="text-gray-500">Executive overview of factory operations</p>
       </div>
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-        {kpis.map((kpi) => (
-          <div key={kpi.label} className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 flex items-center hover:shadow-md transition-shadow">
-            <div className={`w-12 h-12 rounded-xl ${kpi.bg} flex items-center justify-center mr-4 flex-shrink-0`}>
-              <kpi.icon className={`w-6 h-6 text-${kpi.color}-600`} />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+          <div className="flex items-center space-x-4">
+            <div className="p-3 bg-blue-50 text-blue-600 rounded-lg">
+              <FolderKanban className="w-6 h-6" />
             </div>
             <div>
-              <p className="text-sm font-medium text-gray-500">{kpi.label}</p>
-              <p className="text-2xl font-bold text-gray-900 mt-0.5">{kpi.value}</p>
+              <p className="text-sm font-medium text-gray-500">Total Projects</p>
+              <h3 className="text-2xl font-bold text-gray-900">{stats.totalProjects}</h3>
             </div>
           </div>
-        ))}
+        </div>
+
+        <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+          <div className="flex items-center space-x-4">
+            <div className="p-3 bg-emerald-50 text-emerald-600 rounded-lg">
+              <Activity className="w-6 h-6" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-500">Active Projects</p>
+              <h3 className="text-2xl font-bold text-gray-900">{stats.activeProjects}</h3>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+          <div className="flex items-center space-x-4">
+            <div className="p-3 bg-purple-50 text-purple-600 rounded-lg">
+              <Box className="w-6 h-6" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-500">Finished Goods Total</p>
+              <h3 className="text-2xl font-bold text-gray-900">{stats.totalFinishedGoods}</h3>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+          <div className="flex items-center space-x-4">
+            <div className="p-3 bg-orange-50 text-orange-600 rounded-lg">
+              <AlertTriangle className="w-6 h-6" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-500">Pending Yarn Requests</p>
+              <h3 className="text-2xl font-bold text-gray-900">{stats.pendingYarnRequests}</h3>
+            </div>
+          </div>
+        </div>
+
       </div>
 
-      {/* Alerts Section */}
-      {pendingAlerts.length > 0 && (
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-              <AlertTriangle className="w-5 h-5 text-amber-500" />
-              Active Alerts
-              <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-amber-100 text-amber-700 text-xs font-bold">
-                {pendingAlerts.length}
-              </span>
-            </h2>
-          </div>
-          <div className="space-y-3">
-            {pendingAlerts.map((alert, i) => (
-              <div
-                key={i}
-                className={`flex items-start justify-between p-3 rounded-lg border ${
-                  alert.type === 'error' ? 'bg-red-50 border-red-100' : 'bg-amber-50 border-amber-100'
-                }`}
-              >
-                <div className="flex items-start gap-3">
-                  {alert.type === 'error' ? (
-                    <XCircle className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
-                  ) : (
-                    <AlertTriangle className="w-5 h-5 text-amber-500 mt-0.5 flex-shrink-0" />
-                  )}
-                  <p className={`text-sm font-medium ${alert.type === 'error' ? 'text-red-800' : 'text-amber-800'}`}>
-                    {alert.message}
-                  </p>
-                </div>
-                <Link
-                  to={alert.link}
-                  className={`text-xs font-medium flex-shrink-0 ml-4 ${
-                    alert.type === 'error' ? 'text-red-600 hover:text-red-800' : 'text-amber-600 hover:text-amber-800'
-                  }`}
-                >
-                  View
-                </Link>
-              </div>
-            ))}
-          </div>
+      <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden mt-8">
+        <div className="px-6 py-4 border-b border-gray-200">
+          <h2 className="text-lg font-bold text-gray-900">Active Projects Production Status</h2>
         </div>
-      )}
-
-      {/* Main Content: Production Overview + Running Projects */}
-      <div className="grid grid-cols-1 xl:grid-cols-5 gap-6">
-
-        {/* Production Overview — 2/5 width */}
-        <div className="xl:col-span-2 bg-white rounded-xl border border-gray-100 shadow-sm p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-bold text-gray-900">Production Overview</h2>
-            <Link to="/dashboard/merchandiser/reports" className="text-xs font-medium text-[#0047ff] hover:underline flex items-center">
-              View Reports <ArrowRight className="w-3 h-3 ml-1" />
-            </Link>
-          </div>
-          <div className="space-y-4">
-            {PRODUCTION_ORDER.map((dept) => {
-              const pct = deptProgress[dept] || 0;
-              return (
-                <div key={dept} className="flex items-center gap-4">
-                  <div className="w-24 text-xs font-medium text-gray-600 truncate">{dept}</div>
-                  <div className="flex-1 bg-gray-100 rounded-full h-2.5 overflow-hidden">
-                    <div
-                      className={`h-full rounded-full transition-all duration-700 ${
-                        pct === 100 ? 'bg-green-500' :
-                        pct >= 50 ? 'bg-blue-500' :
-                        pct >= 20 ? 'bg-amber-500' : 'bg-gray-300'
-                      }`}
-                      style={{ width: `${pct}%` }}
-                    />
-                  </div>
-                  <div className="w-10 text-xs font-semibold text-gray-700 text-right">{pct}%</div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Running Projects — 3/5 width */}
-        <div className="xl:col-span-3 bg-white rounded-xl border border-gray-100 shadow-sm p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-bold text-gray-900">Running Projects</h2>
-            <span className="text-xs text-gray-500">{stats.totalActive} active</span>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-left">
-              <thead>
-                <tr className="border-b border-gray-100">
-                  {['Project ID', 'Buyer', 'Product', 'Qty', 'Dept', 'Progress', 'Deadline', 'Status'].map(h => (
-                    <th key={h} className="pb-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">{h}</th>
-                  ))}
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Project</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Target Qty</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Active Departments</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Delivery Date</th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {activeProjectsList.map((p) => (
+                <tr key={p.id}>
+                  <td className="px-6 py-4 whitespace-nowrap font-medium text-gray-900">{p.order_number}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-gray-500">{p.product_name}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-gray-500">{p.quantity}</td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className="px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+                      {p.departments}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {p.delivery_date ? new Date(p.delivery_date).toLocaleDateString() : 'N/A'}
+                  </td>
                 </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-50">
-                {DEMO_PROJECTS
-                  .filter(p => p.status !== 'Completed' && p.status !== 'Cancelled' && p.status !== 'Draft')
-                  .map((proj) => {
-                    const progress = getProjectProgress(proj.id);
-                    const isDelayed = proj.status === 'Delayed';
-                    return (
-                      <tr key={proj.id} className="hover:bg-gray-50/50 transition-colors">
-                        <td className="py-3 pr-4">
-                          <button
-                            onClick={() => navigate(`/dashboard/projects/${proj.id}`)}
-                            className="text-sm font-semibold text-[#0047ff] hover:underline"
-                          >
-                            {proj.project_id}
-                          </button>
-                        </td>
-                        <td className="py-3 pr-4">
-                          <span className="text-sm text-gray-700">{proj.buyers?.company_name}</span>
-                        </td>
-                        <td className="py-3 pr-4">
-                          <span className="text-sm text-gray-900 font-medium">{proj.product_name}</span>
-                        </td>
-                        <td className="py-3 pr-4">
-                          <span className="text-sm text-gray-600">{proj.quantity.toLocaleString()}</span>
-                        </td>
-                        <td className="py-3 pr-4">
-                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-700">
-                            {proj.current_department || '—'}
-                          </span>
-                        </td>
-                        <td className="py-3 pr-4">
-                          <div className="flex items-center gap-2">
-                            <div className="w-16 bg-gray-100 rounded-full h-1.5">
-                              <div
-                                className={`h-full rounded-full ${isDelayed ? 'bg-red-400' : progress >= 50 ? 'bg-blue-500' : 'bg-amber-400'}`}
-                                style={{ width: `${progress}%` }}
-                              />
-                            </div>
-                            <span className="text-xs font-medium text-gray-600">{progress}%</span>
-                          </div>
-                        </td>
-                        <td className="py-3 pr-4">
-                          <span className="text-sm text-gray-600">
-                            {new Date(proj.delivery_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}
-                          </span>
-                        </td>
-                        <td className="py-3">
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${
-                            isDelayed ? 'bg-red-100 text-red-700' :
-                            progress >= 50 ? 'bg-blue-100 text-blue-700' :
-                            'bg-amber-100 text-amber-700'
-                          }`}>
-                            {isDelayed ? 'Delayed' : progress >= 50 ? 'On Track' : 'In Progress'}
-                          </span>
-                        </td>
-                      </tr>
-                    );
-                  })}
-              </tbody>
-            </table>
-          </div>
+              ))}
+              {activeProjectsList.length === 0 && (
+                <tr><td colSpan={5} className="px-6 py-4 text-center text-gray-500">No active projects</td></tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
-
-      {/* Bottom Row: Recent Activity + Quick Actions */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 bg-white rounded-xl border border-gray-100 shadow-sm p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-              <Activity className="w-5 h-5 text-gray-400" />
-              Recent Activity
-            </h2>
-            <Link to="/dashboard/activity-log" className="text-xs font-medium text-[#0047ff] hover:underline flex items-center">
-              View All <ArrowRight className="w-3 h-3 ml-1" />
-            </Link>
-          </div>
-          <div className="space-y-3">
-            {recentActivity.map((log) => (
-              <div key={log.id} className="flex items-start gap-3 pb-3 border-b border-gray-50 last:border-0 last:pb-0">
-                <div className="w-2 h-2 mt-2 rounded-full bg-blue-400 flex-shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900">{log.description}</p>
-                  <p className="text-xs text-gray-400 mt-0.5">
-                    {new Date(log.created_at).toLocaleString('en-GB', {
-                      day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit'
-                    })}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
-          <h2 className="text-lg font-bold text-gray-900 mb-4">Quick Access</h2>
-          <div className="space-y-3">
-            {[
-              { label: 'All Projects', path: '/dashboard/projects', icon: FolderKanban, count: DEMO_PROJECTS.length },
-              { label: 'Pending Transfers', path: '/dashboard/transfers', icon: ArrowRight, count: DEMO_TRANSFERS.filter(t => t.status === 'Pending').length },
-              { label: 'Production Reports', path: '/dashboard/merchandiser/reports', icon: BarChart3, count: null },
-              { label: 'User Management', path: '/dashboard/admin/users', icon: Activity, count: null },
-            ].map((item) => (
-              <Link
-                key={item.label}
-                to={item.path}
-                className="flex items-center justify-between p-3 rounded-lg border border-gray-100 hover:border-[#0047ff] hover:bg-blue-50/30 transition-all group"
-              >
-                <div className="flex items-center gap-3">
-                  <item.icon className="w-5 h-5 text-gray-400 group-hover:text-[#0047ff]" />
-                  <span className="text-sm font-medium text-gray-700 group-hover:text-[#0047ff]">{item.label}</span>
-                </div>
-                {item.count !== null && (
-                  <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-gray-100 text-xs font-bold text-gray-600">
-                    {item.count}
-                  </span>
-                )}
-              </Link>
-            ))}
-          </div>
-        </div>
-      </div>
-
     </div>
   );
 }

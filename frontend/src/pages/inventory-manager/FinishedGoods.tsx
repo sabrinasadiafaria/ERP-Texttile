@@ -1,10 +1,14 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Loader2, Archive } from 'lucide-react';
+import { Loader2, Archive, Inbox } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { productionService } from '@/lib/services/productionService';
+import { useAuth } from '@/contexts/AuthContext';
 
 export function FinishedGoods() {
+  const { profile } = useAuth();
   const [data, setData] = useState<any[]>([]);
+  const [incomingTransfers, setIncomingTransfers] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -15,14 +19,35 @@ export function FinishedGoods() {
     setIsLoading(true);
     try {
       const { data: goods } = await supabase
-        .from('finished_goods_cartons')
-        .select('*, finished_good:finished_goods(project:projects(name, project_code)), bin:warehouse_bins(name)')
-        .order('received_date', { ascending: false });
+        .from('finished_goods')
+        .select('*, projects(order_number, product_name)')
+        .order('created_at', { ascending: false });
       setData(goods || []);
+
+      const transfers = await productionService.getIncomingTransfers('finished_goods');
+      setIncomingTransfers(transfers || []);
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleAcceptTransfer = async (transferId: string, projectId: string, quantity: number) => {
+    if (!profile?.id) return;
+    try {
+      // 1. Mark transfer accepted (it will create a dummy production record in finished_goods which is fine)
+      await productionService.acceptTransfer(transferId, profile.id, quantity, 0, 0);
+      
+      // 2. Insert into finished_goods
+      await supabase.from('finished_goods').insert({
+        project_id: projectId,
+        total_quantity: quantity
+      });
+      
+      fetchData();
+    } catch (e) {
+      console.error(e);
     }
   };
 
@@ -38,8 +63,29 @@ export function FinishedGoods() {
           <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Finished Goods Warehouse</h1>
           <p className="text-sm text-gray-500 mt-1">Manage completed products packed and ready for shipment.</p>
         </div>
-        <Button className="bg-[#0047ff] hover:bg-blue-700">Receive from Packing</Button>
       </div>
+
+      {incomingTransfers.length > 0 && (
+        <div className="bg-white rounded-xl shadow-sm border border-blue-200 overflow-hidden mb-6">
+          <div className="p-4 bg-blue-50 border-b border-blue-100 flex items-center text-blue-800">
+            <Inbox className="w-5 h-5 mr-2" />
+            <h2 className="font-bold">Incoming from Packaging</h2>
+          </div>
+          <div className="p-4 divide-y">
+            {incomingTransfers.map(t => (
+              <div key={t.id} className="py-3 flex justify-between items-center">
+                <div>
+                  <p className="font-semibold text-sm">Project: {t.projects?.order_number}</p>
+                  <p className="text-xs text-gray-500">Qty: {t.quantity}</p>
+                </div>
+                <Button onClick={() => handleAcceptTransfer(t.id, t.project_id, t.quantity)} size="sm" className="bg-[#0047ff]">
+                  Receive Goods
+                </Button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="p-6 border-b border-gray-200 flex items-center justify-between bg-gray-50/50">
@@ -69,47 +115,30 @@ export function FinishedGoods() {
               <table className="min-w-full divide-y divide-gray-200">
                 <thead>
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Carton Number</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Project</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Quantity</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Location (Bin)</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date Received</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Project Number</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total Quantity</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
                   {data.map((item) => (
                     <tr key={item.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{item.carton_number}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{item.finished_good?.project?.name}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{item.quantity} units</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {item.bin?.name || 'Unassigned'}
-                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{new Date(item.created_at).toLocaleDateString()}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{item.projects?.order_number}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{item.projects?.product_name}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{item.total_quantity} units</td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize
-                          ${item.shipment_status === 'Stored' ? 'bg-blue-100 text-blue-800' : 
-                            item.shipment_status === 'Reserved' ? 'bg-yellow-100 text-yellow-800' :
-                            item.shipment_status === 'Ready For Shipment' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
-                          {item.shipment_status}
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize bg-green-100 text-green-800`}>
+                          In Stock
                         </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        {item.shipment_status === 'Stored' && (
-                          <button onClick={() => handleUpdateStatus(item.id, 'Reserved')} className="text-[#0047ff] hover:text-blue-900 mx-2">Reserve</button>
-                        )}
-                        {item.shipment_status === 'Reserved' && (
-                          <button onClick={() => handleUpdateStatus(item.id, 'Ready For Shipment')} className="text-green-600 hover:text-green-900 mx-2">Set Ready</button>
-                        )}
-                        {item.shipment_status === 'Ready For Shipment' && (
-                          <button onClick={() => handleUpdateStatus(item.id, 'Dispatched')} className="text-purple-600 hover:text-purple-900 mx-2">Dispatch</button>
-                        )}
                       </td>
                     </tr>
                   ))}
                   {data.length === 0 && (
                     <tr>
-                      <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
+                      <td colSpan={5} className="px-6 py-12 text-center text-gray-500">
                         <Archive className="mx-auto h-12 w-12 text-gray-400" />
                         <p className="mt-2 text-sm font-medium text-gray-900">No finished goods found.</p>
                       </td>
