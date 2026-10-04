@@ -24,7 +24,7 @@ export function FinishedGoods() {
         .order('created_at', { ascending: false });
       setData(goods || []);
 
-      const transfers = await productionService.getIncomingTransfers('finished_goods');
+      const transfers = await productionService.getIncomingTransfers('Inventory');
       setIncomingTransfers(transfers || []);
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -36,13 +36,13 @@ export function FinishedGoods() {
   const handleAcceptTransfer = async (transferId: string, projectId: string, quantity: number) => {
     if (!profile?.id) return;
     try {
-      // 1. Mark transfer accepted (it will create a dummy production record in finished_goods which is fine)
-      await productionService.acceptTransfer(transferId, profile.id, quantity, 0, 0);
-      
-      // 2. Insert into finished_goods
-      await supabase.from('finished_goods').insert({
-        project_id: projectId,
-        total_quantity: quantity
+      // Accept the transfer; a DB trigger adds the finished_goods row.
+      await supabase.from('production_transfers').update({
+        status: 'ACCEPTED', accepted_quantity: quantity, accepted_by: profile.id, accepted_at: new Date().toISOString(),
+      }).eq('id', transferId);
+      await supabase.from('production_records').insert({
+        project_id: projectId, department: 'Inventory', input_quantity: quantity,
+        planned_quantity: quantity, status: 'COMPLETED', created_by: profile.id,
       });
       
       fetchData();

@@ -7,6 +7,7 @@ import {
 import type { TransferStatus } from '@/lib/services/production';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
+import { getDepartmentForRole, ROLES } from '@/lib/roles';
 
 type ValidationIssue =
   | { type: 'exceeds_produced'; message: string }
@@ -69,7 +70,16 @@ export function TransfersPage() {
       supabase.from('activity_logs').select('*').eq('module', 'transfer').order('created_at', { ascending: false }).limit(10)
     ]);
 
-    if (transfersData) setTransfers(transfersData);
+    // Department users only see transfers into/out of their own department.
+    const role = profile?.role || '';
+    const cfg = getDepartmentForRole(role);
+    const myDept = cfg
+      ? (cfg.displayName.includes('Trimming') ? 'Trimming' : cfg.displayName)
+      : role === ROLES.INVENTORY_MANAGER ? 'Inventory' : null;
+    const scoped = myDept
+      ? (transfersData || []).filter((t: any) => t.from_department === myDept || t.to_department === myDept)
+      : transfersData;
+    if (scoped) setTransfers(scoped);
     if (recordsData) setRecords(recordsData);
     if (projectsData) setProjects(projectsData);
     if (logsData) setTransferLogs(logsData);
@@ -78,7 +88,7 @@ export function TransfersPage() {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [profile?.role]);
 
   const filtered = useMemo(() => {
     if (filterStatus === 'All') return transfers;
@@ -273,8 +283,8 @@ export function TransfersPage() {
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="text-sm font-semibold text-[#0047ff]">{proj?.project_id || t.project_id}</span>
-                          <span className="text-xs text-gray-400">â€¢</span>
+                          <span className="text-sm font-semibold text-[#0047ff]">{proj?.order_number || t.project_id}</span>
+                          <span className="text-xs text-gray-400">•</span>
                           <span className="text-xs text-gray-600">{proj?.product_name}</span>
                         </div>
                         <div className="flex items-center gap-2 text-sm text-gray-700">
@@ -325,7 +335,7 @@ export function TransfersPage() {
                 <div className="space-y-3 text-sm">
                   <div className="flex justify-between">
                     <span className="text-gray-500">Project</span>
-                    <span className="font-medium">{selectedProject?.project_id}</span>
+                    <span className="font-medium">{selectedProject?.order_number}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-500">Buyer</span>

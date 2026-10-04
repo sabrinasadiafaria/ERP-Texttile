@@ -61,6 +61,8 @@ export function DepartmentRecordRow({ record, department, userId, onChanged }: P
     if (!next) return;
     if (good <= 0) return setError('No good pieces to transfer');
     setBusy(true); setError('');
+    const { data: existing } = await supabase.from('production_transfers').select('id').eq('source_production_record', record.id).neq('status', 'REJECTED').limit(1);
+    if (existing && existing.length > 0) { setBusy(false); setError('Transfer already created'); onChanged(); return; }
     const { data: t, error: err } = await supabase.from('production_transfers').insert({
       project_id: record.project_id,
       from_department: department,

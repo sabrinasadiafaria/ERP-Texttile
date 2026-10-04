@@ -85,7 +85,7 @@ export const productionService = {
   async getIncomingTransfers(department: string) {
     const { data, error } = await supabase
       .from('production_transfers')
-      .select('*, projects(*), source_production_record(*)')
+      .select('*, projects(*)')
       .eq('to_department', department)
       .eq('status', 'PENDING')
       .order('created_at', { ascending: false });
