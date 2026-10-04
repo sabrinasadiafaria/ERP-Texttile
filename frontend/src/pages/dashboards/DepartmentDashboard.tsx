@@ -1,4 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+import { DepartmentRecordRow } from './DepartmentRecordRow';
 import { Link, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, Package, Clock, CheckCircle2, AlertTriangle,
@@ -39,14 +41,15 @@ export function DepartmentDashboard() {
   const [activeProjectsList, setActiveProjectsList] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
+  const { profile } = useAuth();
+  const [acceptingId, setAcceptingId] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
     if (!department) {
       setIsLoading(false);
       return;
     }
-
-    async function fetchDeptData() {
-      setIsLoading(true);
+    {
       const [
         { data: allRecords },
         { data: allProjects },
@@ -87,14 +90,43 @@ export function DepartmentDashboard() {
         avgEfficiency,
       });
 
-      setRecentRecords(records.slice(0, 5));
-      setPendingTransfers([...transfersIn, ...transfersOut].slice(0, 5));
+      setRecentRecords([...records].sort((a, b) => (b.created_at || '').localeCompare(a.created_at || '')));
+      setPendingTransfers([...transfersIn, ...transfersOut]);
       setActiveProjectsList(activeProjects);
       setIsLoading(false);
     }
-
-    fetchDeptData();
   }, [department]);
+
+  useEffect(() => { load(); }, [load]);
+
+  async function acceptTransfer(t: any) {
+    setAcceptingId(t.id);
+    const { error } = await supabase.from('production_transfers').update({
+      status: 'ACCEPTED',
+      accepted_quantity: t.quantity,
+      accepted_by: profile?.id,
+      accepted_at: new Date().toISOString(),
+    }).eq('id', t.id);
+    if (!error) {
+      await supabase.from('production_records').insert({
+        project_id: t.project_id,
+        department: t.to_department,
+        input_quantity: t.quantity,
+        planned_quantity: t.quantity,
+        status: t.to_department === 'Inventory' ? 'COMPLETED' : 'RECEIVED',
+        created_by: profile?.id,
+      });
+      await supabase.from('activity_logs').insert({
+        user_id: profile?.id, project_id: t.project_id, action: 'ACCEPT_TRANSFER', module: 'production',
+        entity_type: 'transfer', entity_id: t.id,
+        description: `${t.to_department} accepted ${t.quantity} pcs from ${t.from_department}`,
+      });
+    } else {
+      alert(error.message);
+    }
+    setAcceptingId(null);
+    load();
+  }
 
   if (!department) {
     return (
@@ -235,8 +267,14 @@ export function DepartmentDashboard() {
                       <span className="text-xs text-gray-500">{t.quantity?.toLocaleString()} pcs</span>
                     </div>
                     <p className="text-sm font-medium text-gray-900 mt-1">
-                      {t.from_department} → {t.to_department}
+                      {t.projects?.order_number} • {t.from_department} → {t.to_department}
                     </p>
+                    {isIncoming && (
+                      <button disabled={acceptingId === t.id} onClick={() => acceptTransfer(t)}
+                        className="mt-2 px-3 py-1.5 rounded-lg bg-[#0047ff] text-white text-xs font-medium disabled:opacity-50">
+                        {acceptingId === t.id ? 'Accepting…' : 'Accept Transfer'}
+                      </button>
+                    )}
                     <p className="text-xs text-gray-400 mt-0.5">
                       {new Date(t.created_at || new Date()).toLocaleString('en-GB', {
                         day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit'
@@ -252,7 +290,7 @@ export function DepartmentDashboard() {
 
       {/* Recent Records */}
       <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
-        <h2 className="text-lg font-bold text-gray-900 mb-4">Recent Production Records</h2>
+        <h2 className="text-lg font-bold text-gray-900 mb-4">Production Records</h2>
         {recentRecords.length === 0 ? (
           <p className="text-sm text-gray-500 py-4">No production records yet.</p>
         ) : (
@@ -260,34 +298,15 @@ export function DepartmentDashboard() {
             <table className="w-full text-left text-sm">
               <thead>
                 <tr className="border-b border-gray-100">
-                  {['Project', 'Received', 'Produced', 'Rejected', 'Damaged', 'Status'].map(h => (
+                  {['Project', 'Received', 'Produced', 'Rejected', 'Damaged', 'Status', 'Action'].map(h => (
                     <th key={h} className="pb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
-                {recentRecords.map((r) => {
-                  return (
-                    <tr key={r.id} className="hover:bg-gray-50/50">
-                      <td className="py-2.5 pr-4">
-                        <span className="text-sm font-medium text-[#0047ff]">{r.projects?.order_number || r.project_id}</span>
-                      </td>
-                      <td className="py-2.5 pr-4 text-gray-700">{(r.input_quantity || 0).toLocaleString()}</td>
-                      <td className="py-2.5 pr-4 font-medium text-gray-900">{(r.produced_quantity || 0).toLocaleString()}</td>
-                      <td className="py-2.5 pr-4 text-red-600">{(r.rejected_quantity || 0).toLocaleString()}</td>
-                      <td className="py-2.5 pr-4 text-amber-600">{(r.damaged_quantity || 0).toLocaleString()}</td>
-                      <td className="py-2.5">
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                          r.status === 'COMPLETED' ? 'bg-green-100 text-green-700' :
-                          r.status === 'IN_PROGRESS' || r.status === 'QC_PENDING' ? 'bg-blue-100 text-blue-700' :
-                          'bg-gray-100 text-gray-700'
-                        }`}>
-                          {r.status}
-                        </span>
-                      </td>
-                    </tr>
-                  );
-                })}
+                {recentRecords.map((r) => (
+                  <DepartmentRecordRow key={`${r.id}-${r.updated_at}`} record={r} department={department} userId={profile?.id} onChanged={load} />
+                ))}
               </tbody>
             </table>
           </div>
