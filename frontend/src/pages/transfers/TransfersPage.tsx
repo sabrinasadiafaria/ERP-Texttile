@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+﻿import { useEffect, useMemo, useState } from 'react';
 import {
   ArrowRightLeft, CheckCircle2, XCircle, AlertTriangle,
   Filter, Loader2, Clock, Calculator, ArrowRight, FileText,
@@ -26,7 +26,7 @@ function validateTransfer(t: any, records: any[]): ValidationIssue {
   if (t.quantity > sourceRecord.produced_quantity) {
     return {
       type: 'exceeds_produced',
-      message: `Transfer quantity (${t.quantity.toLocaleString()}) exceeds source produced quantity (${sourceRecord.produced_quantity.toLocaleString()}).`,
+      message: `Transfer quantity (${Number(t.quantity || 0).toLocaleString()}) exceeds source produced quantity (${Number(sourceRecord.produced_quantity || 0).toLocaleString()}).`,
     };
   }
 
@@ -34,13 +34,13 @@ function validateTransfer(t: any, records: any[]): ValidationIssue {
   if (totalAccountedFor > sourceRecord.produced_quantity) {
     return {
       type: 'mismatch_rejected',
-      message: `Quantity + rejected (${totalAccountedFor.toLocaleString()}) exceeds source produced (${sourceRecord.produced_quantity.toLocaleString()}).`,
+      message: `Quantity + rejected (${totalAccountedFor.toLocaleString()}) exceeds source produced (${Number(sourceRecord.produced_quantity || 0).toLocaleString()}).`,
     };
   }
 
   return {
     type: 'ok',
-    message: `Math OK: ${t.quantity.toLocaleString()} shipped + ${(t.rejected_quantity || 0).toLocaleString()} rejected = ${totalAccountedFor.toLocaleString()} / ${sourceRecord.produced_quantity.toLocaleString()} produced.`,
+    message: `Math OK: ${Number(t.quantity || 0).toLocaleString()} shipped + ${(t.rejected_quantity || 0).toLocaleString()} rejected = ${totalAccountedFor.toLocaleString()} / ${Number(sourceRecord.produced_quantity || 0).toLocaleString()} produced.`,
   };
 }
 
@@ -231,7 +231,7 @@ export function TransfersPage() {
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-5 gap-6">
-        {/* Transfer List — 3/5 */}
+        {/* Transfer List â€” 3/5 */}
         <div className="xl:col-span-3 bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
           <div className="p-6 border-b border-gray-100 flex items-center justify-between">
             <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
@@ -260,14 +260,14 @@ export function TransfersPage() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
                           <span className="text-sm font-semibold text-[#0047ff]">{proj?.project_id || t.project_id}</span>
-                          <span className="text-xs text-gray-400">•</span>
+                          <span className="text-xs text-gray-400">â€¢</span>
                           <span className="text-xs text-gray-600">{proj?.product_name}</span>
                         </div>
                         <div className="flex items-center gap-2 text-sm text-gray-700">
                           <span className="font-medium">{t.from_department}</span>
                           <ArrowRight className="w-3.5 h-3.5 text-gray-400" />
                           <span className="font-medium">{t.to_department}</span>
-                          <span className="text-gray-400 ml-2">{t.quantity.toLocaleString()} pcs</span>
+                          <span className="text-gray-400 ml-2">{Number(t.quantity || 0).toLocaleString()} pcs</span>
                         </div>
                         <div className="flex items-center gap-3 mt-2">
                           <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
@@ -299,7 +299,7 @@ export function TransfersPage() {
           )}
         </div>
 
-        {/* Detail Panel — 2/5 */}
+        {/* Detail Panel â€” 2/5 */}
         <div className="xl:col-span-2 space-y-6">
           {selected ? (
             <>
@@ -327,11 +327,11 @@ export function TransfersPage() {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-500">Quantity</span>
-                    <span className="font-medium">{selected.quantity.toLocaleString()}</span>
+                    <span className="font-medium">{Number(selected.quantity || 0).toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-500">Rejected</span>
-                    <span className="font-medium">{selected.rejected_quantity.toLocaleString()}</span>
+                    <span className="font-medium">{Number(selected.rejected_quantity || 0).toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-500">Status</span>
@@ -350,7 +350,7 @@ export function TransfersPage() {
                     </button>
                     <button
                       onClick={() => {
-                        const approved = prompt(`Partial approval — accepted qty (max ${selected.quantity}):`, String(Math.floor(selected.quantity / 2)));
+                        const approved = prompt(`Partial approval â€” accepted qty (max ${selected.quantity}):`, String(Math.floor(selected.quantity / 2)));
                         if (approved) handlePartialAccept(selected.id, selected, parseFloat(approved));
                       }}
                       className="flex items-center justify-center gap-1 px-3 py-2 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors text-xs font-medium"
