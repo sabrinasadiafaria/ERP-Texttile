@@ -135,6 +135,15 @@ export function YarnRequestPage() {
       issued_quantity: req.approved_quantity,
     }).eq('id', id);
 
+    // Kick off the production engine by inserting the first record into Knitting
+    await supabase.from('production_records').insert({
+      project_id: req.project_id,
+      department: 'Knitting',
+      input_quantity: req.approved_quantity,
+      status: 'RECEIVED',
+      created_by: profile?.id
+    });
+
     await supabase.from('activity_logs').insert({
       user_id: profile?.id,
       action: 'ISSUE',
