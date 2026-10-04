@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   ArrowRightLeft, CheckCircle2, XCircle, AlertTriangle,
   Filter, Loader2, Clock, Calculator, ArrowRight, FileText,
@@ -92,7 +92,20 @@ export function TransfersPage() {
     rejected: transfers.filter(t => t.status === 'Rejected' || t.status === 'REJECTED').length,
   }), [transfers]);
 
+  const receiveIntoDepartment = async (t: any, qty: number) => {
+    await supabase.from('production_records').insert({
+      project_id: t.project_id,
+      department: t.to_department,
+      input_quantity: qty,
+      planned_quantity: qty,
+      status: t.to_department === 'Inventory' ? 'COMPLETED' : 'RECEIVED',
+      created_by: profile?.id,
+    });
+  };
+
   const handleAccept = async (id: string, t: any) => {
+    if (t.status !== 'PENDING' && t.status !== 'Pending') return;
+    await receiveIntoDepartment(t, t.quantity);
     await supabase.from('production_transfers').update({
       status: 'ACCEPTED',
       accepted_quantity: t.quantity,
@@ -144,6 +157,7 @@ export function TransfersPage() {
 
   const handlePartialAccept = async (id: string, t: any, acceptedQty: number) => {
     const rejectedQty = t.quantity - acceptedQty;
+    if (acceptedQty > 0) await receiveIntoDepartment(t, acceptedQty);
     await supabase.from('production_transfers').update({
       status: 'PARTIAL',
       accepted_quantity: acceptedQty,
